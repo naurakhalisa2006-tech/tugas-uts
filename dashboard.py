@@ -135,7 +135,8 @@ st.divider()
 # SIDEBAR (Rapi & Terstruktur)
 # --------------------------
 st.sidebar.header("⚙️ Pengaturan & Status")
-menu = st.sidebar.selectbox("Pilih Fungsionalitas:", ["Klasifikasi Gambar (Clean/Messy)", "Deteksi Objek (YOLO)"])
+# PERBAIKAN: Menukar urutan agar "Deteksi Objek (YOLO)" menjadi default (item pertama)
+menu = st.sidebar.selectbox("Pilih Fungsionalitas:", ["Deteksi Objek (YOLO)", "Klasifikasi Gambar (Clean/Messy)"])
 st.sidebar.markdown("---")
 
 # Visual feedback model status di sidebar (Mudah Dipahami)
@@ -266,12 +267,12 @@ else:
                         
 
                 except Exception as e:
-                    # --- LOGIKA DEBUG BARU DITAMBAHKAN DI SINI ---
+                    # --- LOGIKA DEBUG INPUT SHAPE ---
                     expected_flattened_size = 'Unknown'
                     received_flattened_size = 'Unknown'
 
                     try:
-                        # Mencoba menemukan ukuran input yang diharapkan oleh lapisan Dense (9216)
+                        # Mencoba menemukan ukuran input yang diharapkan oleh lapisan Dense 
                         for layer in classifier.layers:
                             if 'dense' in layer.name:
                                 expected_flattened_size = layer.input_shape[1]
