@@ -1,10 +1,10 @@
 import streamlit as st
-from ultralytics import YOLO
-import tensorflow as tf
-from tensorflow.keras.preprocessing import image
+# Hapus import: from ultralytics import YOLO
+# Hapus import: import tensorflow as tf
+# Hapus import: from tensorflow.keras.preprocessing import image
 import numpy as np
 from PIL import Image
-import cv2
+# Hapus import: import cv2 (Akan diimpor di dalam fungsi untuk mencegah konflik awal)
 
 # ==========================
 # 1. KONFIGURASI HALAMAN UNIK (Untuk estetika & layout)
@@ -57,8 +57,19 @@ st.markdown(
 # ==========================
 # Load Models
 # ==========================
-@st.cache_resource
+@st.cache_resource(show_spinner="Memuat model AI...")
 def load_models():
+    # Pindahkan impor library berat ke sini untuk menghindari konflik Import saat start up
+    try:
+        from ultralytics import YOLO
+        import tensorflow as tf
+        from tensorflow.keras.preprocessing import image
+        # cv2 akan diimpor oleh ultralytics, jadi tidak perlu impor eksplisit di sini
+        import cv2 # Impor eksplisit untuk preprocessing jika diperlukan
+    except ImportError as e:
+        # Jika salah satu library utama gagal, kita masih bisa melanjutkan dengan feedback error yang jelas
+        return None, None, False, False, f"ImportError: {e}"
+
     # Define paths
     yolo_path = "model/Siti Naura Khalisa_Laporan 4.pt"
     classifier_path = "model/SitiNauraKhalisa_Laporan2.h5"
@@ -67,25 +78,43 @@ def load_models():
     classifier = None
     yolo_loaded = False
     classifier_loaded = False
+    error_message = None
 
     # Load YOLO model
     try:
         yolo_model = YOLO(yolo_path)
         yolo_loaded = True
-    except Exception:
-        pass # Error handled below
+    except FileNotFoundError:
+        error_message = "❌ YOLO Model GAGAL dimuat: File '.pt' tidak ditemukan di folder 'model/'."
+    except Exception as e:
+        error_message = f"❌ YOLO Model GAGAL dimuat: Error saat memuat YOLO: {e}"
 
     # Load Keras Classification model
     try:
         classifier = tf.keras.models.load_model(classifier_path)
         classifier_loaded = True
-    except Exception:
-        pass # Error handled below
+    except FileNotFoundError:
+        if not error_message: error_message = "❌ Klasifikasi Model GAGAL dimuat: File '.h5' tidak ditemukan di folder 'model/'."
+    except Exception as e:
+        if not error_message: error_message = f"❌ Klasifikasi Model GAGAL dimuat: Error saat memuat Keras: {e}"
         
-    return yolo_model, classifier, yolo_loaded, classifier_loaded
+    # Kembalikan semua hasil termasuk modul TensorFlow dan Image (untuk digunakan di bawah)
+    return yolo_model, classifier, yolo_loaded, classifier_loaded, error_message
 
 # Memanggil fungsi load_models dan mendapatkan status
-yolo_model, classifier, yolo_loaded, classifier_loaded = load_models()
+yolo_model, classifier, yolo_loaded, classifier_loaded, model_error = load_models()
+
+# Jika load_models berhasil mengimpor library, kita bisa mengimpor modul yang kita butuhkan dari TensorFlow
+if classifier_loaded or yolo_loaded:
+    try:
+        from tensorflow.keras.preprocessing import image as keras_image
+        tf_loaded = True
+    except ImportError:
+        keras_image = None
+        tf_loaded = False
+else:
+    keras_image = None
+    tf_loaded = False
 
 # !!! PERUBAHAN UTAMA UNTUK KLASIFIKASI "CLEAN/MESSY" !!!
 CLASS_NAMES = ["Clean Room", "Messy Room"]
@@ -112,12 +141,16 @@ st.sidebar.subheader("Status Model")
 if yolo_loaded:
     st.sidebar.success("✅ YOLO Model (Deteksi) Siap")
 else:
-    st.sidebar.error("❌ YOLO Model GAGAL dimuat")
+    st.sidebar.error("❌ YOLO Model (Deteksi) GAGAL")
 
 if classifier_loaded:
     st.sidebar.success("✅ Klasifikasi Model Siap")
 else:
-    st.sidebar.error("❌ Klasifikasi Model GAGAL dimuat")
+    st.sidebar.error("❌ Klasifikasi Model GAGAL")
+
+if model_error:
+    st.sidebar.exception(model_error)
+
 
 st.sidebar.markdown("---")
 st.sidebar.caption("Project UTS - Siti Naura Khalisa")
@@ -163,7 +196,7 @@ else:
         # KLASIFIKASI GAMBAR LOGIC
         # ==========================
         if menu == "Klasifikasi Gambar (Clean/Messy)":
-            if classifier and classifier_loaded:
+            if classifier and classifier_loaded and keras_image:
                 st.info("Memulai proses Klasifikasi Kondisi Ruangan...")
                 
                 # Dynamic TARGET_SIZE calculation
@@ -178,7 +211,8 @@ else:
                 try:
                     # Preprocessing
                     img_resized = img.resize(TARGET_SIZE)
-                    img_array = image.img_to_array(img_resized)
+                    # Menggunakan modul yang sudah diimpor jika berhasil
+                    img_array = keras_image.img_to_array(img_resized) 
                     img_array = np.expand_dims(img_array, axis=0) 
                     img_array = img_array / 255.0
 
@@ -231,7 +265,7 @@ else:
                     st.error(f"❌ Terjadi kesalahan saat Klasifikasi: {e}")
                     st.warning("Pastikan ukuran gambar yang diproses sesuai dengan model Anda.")
             else:
-                st.warning("Model Klasifikasi Gambar tidak tersedia. Cek status di sidebar.")
+                st.warning("Model Klasifikasi Gambar tidak tersedia. Cek status di sidebar. Detail Error: " + (model_error if model_error else "Library TensorFlow/Keras gagal dimuat."))
 
 
         # ==========================
@@ -242,6 +276,7 @@ else:
                 st.info("Memulai proses Deteksi Objek dengan YOLO...")
                 try:
                     # Deteksi objek
+                    # Karena ultralytics diimpor dalam load_models, model harus berfungsi
                     results = yolo_model(img, verbose=False)
                     result_img = results[0].plot()
                     
@@ -264,4 +299,4 @@ else:
                 except Exception as e:
                     st.error(f"❌ Gagal menjalankan Deteksi Objek: {e}")
             else:
-                st.warning("Model Deteksi Objek (YOLO) tidak tersedia. Cek status di sidebar.")
+                st.warning("Model Deteksi Objek (YOLO) tidak tersedia. Cek status di sidebar. Detail Error: " + (model_error if model_error else "Library Ultralytics gagal dimuat."))
