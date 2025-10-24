@@ -173,7 +173,7 @@ custom_css = f"""
     .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
     .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
     
-    .clean-border {{ border-color: {ACCENT_PURPLE} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
+    .clean-border {{ border-color: {ACCENT_PRIMARY_NEON} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
     .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
     
     .tips-box {{
