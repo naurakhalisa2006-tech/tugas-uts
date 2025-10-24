@@ -523,13 +523,11 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
             "icon": "✨",
             "color": ACCENT_NEON_CYAN,
             "content": f"""
-                <p>Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada <b>ASET TIDAK OPTIMAL</b> (jumlah: {messy_count}).</p>
-                <p><b>Tips Maintenance:</b></p>
-                <ul>
-                    <li>Lanjutkan dengan prinsip 'Less is More': Pastikan setiap barang memiliki tempatnya yang spesifik.</li>
-                    <li>Audit Digital: Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.</li>
-                    <li>Sistem 5 Menit: Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.</li>
-                </ul>
+                Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. 
+                Sistem kami mendeteksi sedikit atau tidak ada ASET TIDAK OPTIMAL (jumlah: {messy_count})
+                Tips Maintenance:
+                Pastikan setiap barang memiliki tempatnya yang spesifik. Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.</li>
+                Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.
             """
         }
     else: # Messy or Overridden
