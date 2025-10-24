@@ -565,20 +565,20 @@ def render_upload_page():
                 <span class="main-title-glow">ROOM INSIGHT</span>
                 <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">Clean or Messy?</span>
             </h1>
-            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Kerapihan Ruangan Anda</p>
+            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Keadaan Ruangan Anda!</p>
         </header>
         <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
     
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Data Input Matrix (Upload Payload)</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Upload Foto</h2>', unsafe_allow_html=True)
 
     # Menampilkan pesan error jika ML tidak dimuat
     if not ML_LIBRARIES_LOADED:
         st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
         
     uploaded_file = st.file_uploader(
-        "Upload Image File (JPG/PNG) | Initiating Payload Protocol", 
+        "Upload Image File (JPG/PNG)", 
         type=["jpg", "jpeg", "png"],
         key="uploader_main",
         help="Unggah file gambar ruangan untuk dianalisis."
@@ -617,8 +617,8 @@ def render_report_page():
 
     st.markdown(f"""
         <header>
-            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: {ACCENT_PRIMARY_PINK}; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
+            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: TEXT_DARK;">{st.session_state.uploaded_file.name.upper()}</span></h1>
+            <p style="color: TEXT_DARK; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
