@@ -34,10 +34,10 @@ BG_DARK = "#1A1A2E"
 CARD_BG = "#2C3E50"              
 TEXT_LIGHT = "#EAEAEA"          
 ACCENT_PRIMARY_NEON = "#4DFFFF" 
-NEON_CYAN = "#00FFFF"           
-NEON_MAGENTA = "#FF00FF"        
-TEXT_CLEAN_LIGHT = NEON_CYAN    
-TEXT_MESSY_LIGHT = NEON_MAGENTA 
+NEON_CYAN = "#00FFFF"            
+NEON_MAGENTA = "#FF00FF"         
+TEXT_CLEAN_LIGHT = NEON_CYAN     
+TEXT_MESSY_LIGHT = NEON_MAGENTA  
 BUTTON_COLOR_NEON = "#3498DB"
 
 custom_css = f"""
@@ -329,6 +329,7 @@ def draw_boxes_on_image(image_bytes, detections):
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
         except AttributeError:
+            # Fallback untuk versi PIL lama
             text_width, text_height = draw.textsize(text_content, font=font)
             
         text_x = x_min
@@ -357,7 +358,7 @@ def format_execution_log(results, uploaded_file_name):
     
     # Log Model 2: Klasifikasi
     log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete.")
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete. (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%)")
     
     # Log Hybrid Rule
     tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
@@ -368,7 +369,7 @@ def format_execution_log(results, uploaded_file_name):
         final_status_report = "OVERRIDE-REPORT"
     
     final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] {final_status_report}: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span> (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%).")
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] {final_status_report}: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span>.")
     
     return '<br>'.join(log_lines)
 
@@ -442,6 +443,9 @@ def run_ml_analysis():
     MESSY_DETECTION_THRESHOLD = 3 
     
     # 1. Penentuan Awal (Berdasarkan CNN)
+    conf_clean_perc = round(conf_clean * 100, 2)
+    conf_messy_perc = round(conf_messy * 100, 2)
+    
     if conf_clean > conf_messy:
         is_clean = True
     else:
@@ -452,19 +456,19 @@ def run_ml_analysis():
     if is_clean and messy_count >= MESSY_DETECTION_THRESHOLD:
         is_clean = False # Override status
         is_overridden = True
-    
+        
     # 3. Final Status Assignment dan Pesan
     if is_clean:
         final_status = "STATUS: ROOM CLEAN - OPTIMAL"
-        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {round(conf_clean * 100, 2)}%. Excellent organization. (YOLO Messy Count: {messy_count})."
+        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {conf_clean_perc}%. Excellent organization. (YOLO Messy Count: {messy_count})."
     else:
         # Status MESSY
         final_status = "STATUS: ROOM MESSY - ALERT"
         
         if is_overridden:
-            final_message = f"HYBRID OVERRIDE: YOLO detected {messy_count} UNOPTIMIZED assets (Threshold: {MESSY_DETECTION_THRESHOLD}). Final Status: ALERT. (CNN Conf: {round(conf_clean * 100, 2)}% Clean)."
+            final_message = f"HYBRID OVERRIDE: YOLO detected {messy_count} UNOPTIMIZED assets (Threshold: {MESSY_DETECTION_THRESHOLD}). Final Status: ALERT. (CNN Conf: {conf_clean_perc}% Clean)."
         else:
-            final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {round(conf_messy * 100, 2)}%. Clutter detected. Recommendation: De-clutter immediately."
+            final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {conf_messy_perc}%. Clutter detected. Recommendation: De-clutter immediately."
     
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
@@ -472,8 +476,8 @@ def run_ml_analysis():
     results = {
         "final_status": final_status,
         "is_clean": is_clean,
-        "conf_clean": round(conf_clean * 100, 2),
-        "conf_messy": round(conf_messy * 100, 2),
+        "conf_clean": conf_clean_perc, # Simpan dalam persentase
+        "conf_messy": conf_messy_perc, # Simpan dalam persentase
         "messy_count": messy_count, 
         "detection_model": "Siti Naura Khalisa_Laporan 4.pt",
         "classification_model": "SitiNauraKhalisa_Laporan2.h5",
