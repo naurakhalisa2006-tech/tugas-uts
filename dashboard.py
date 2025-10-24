@@ -53,16 +53,61 @@ custom_css = f"""
         }}
     }}
 
+    /* --- ANIMASI JUDUL BARU --- */
+    @keyframes neon-glow {{
+        from {{ text-shadow: 0 0 5px {ACCENT_PURPLE}, 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PURPLE}; }}
+        to {{ text-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PURPLE}, 0 0 20px {ACCENT_PRIMARY_PINK}; }}
+    }}
+
+    @keyframes glitch {{
+        0% {{ transform: translate(0); }}
+        20% {{ transform: translate(-2px, 2px); opacity: 0.9; }}
+        40% {{ transform: translate(-1px, -1px); opacity: 0.85; }}
+        60% {{ transform: translate(3px, 1px); opacity: 0.92; }}
+        80% {{ transform: translate(1px, -2px); opacity: 0.88; }}
+        100% {{ transform: translate(0); }}
+    }}
+
+    .main-title {{
+        color: {TEXT_DARK}; /* Warna dasar gelap */
+        font-size: 5rem;
+        font-weight: 900;
+        letter-spacing: 5px;
+        text-transform: uppercase;
+        margin-bottom: 0px;
+        position: relative;
+        text-align: center;
+        /* Animasi Neon Glow */
+        animation: neon-glow 1.5s ease-in-out infinite alternate;
+        transition: color 0.3s;
+    }}
+
+    .main-title:hover {{
+        color: {ACCENT_PRIMARY_PINK}; /* Ganti warna saat hover */
+        animation: glitch 0.2s linear infinite; /* Tambah glitch saat hover */
+    }}
+    
+    .subtitle-center {{
+        color: {ACCENT_PRIMARY_PINK};
+        font-size: 1.2rem;
+        margin-top: 5px;
+        text-align: center;
+        font-weight: 600;
+        padding-bottom: 30px;
+        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+    }}
+    
+    /* --- END ANIMASI JUDUL BARU --- */
+
     .stApp {{
         background-color: {BG_LIGHT};
         color: {TEXT_DARK};
         font-family: 'Inter', sans-serif;
     }}
+    /* H1 default Streamlit disembunyikan agar tidak konflik dengan .main-title */
     h1 {{
-        color: {ACCENT_PRIMARY_PINK};
-        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
-        padding-bottom: 10px;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
+        display: none; 
     }}
     .modern-card {{
         background-color: {CARD_BG};
@@ -511,9 +556,9 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         }
     else: # Messy or Overridden
         if is_overridden:
-             override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
+            override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
         else:
-             override_note = ""
+            override_note = ""
 
         return {
             "title": "🚨 STATUS PERINGATAN: SARAN OPTIMASI RUANGAN",
@@ -536,13 +581,17 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
 def render_upload_page():
     """Halaman 1: Upload Gambar Saja."""
     
+    # --- JUDUL BARU TERPUSAT ---
     st.markdown(f"""
         <header>
-            <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">CUTE VISION AI</span></h1>
-            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
+            <div style="text-align: center;">
+                <p class="main-title">ROOM INSIGHT</p>
+                <p class="subtitle-center">CUTE VISION AI - Klasifikasikan Kerapihan Ruangan Anda</p>
+            </div>
         </header>
         <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
+    # --- AKHIR JUDUL BARU ---
     
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
     st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Data Input Matrix (Upload Payload)</h2>', unsafe_allow_html=True)
@@ -570,8 +619,8 @@ def render_upload_page():
     if st.button("💖 INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
         # PANGGIL FUNGSI ML NYATA
         with st.spinner('Running Dual-Model Analysis...'):
-             run_ml_analysis() 
-        
+            run_ml_analysis() 
+            
     if st.session_state.uploaded_file and not ML_LIBRARIES_LOADED:
         st.warning("Analisis dinonaktifkan karena pustaka Machine Learning tidak tersedia. Harap instal 'ultralytics' dan 'tensorflow' untuk fungsi penuh.")
 
@@ -591,8 +640,10 @@ def render_report_page():
 
     st.markdown(f"""
         <header>
-            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN).</p>
+            <div style="text-align: center;">
+                <h2 style="color: {ACCENT_PRIMARY_PINK}; border-bottom: none; padding-bottom: 5px;">LAPORAN ANALISIS</h2>
+                <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN) untuk: **{st.session_state.uploaded_file.name.upper()}**</p>
+            </div>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
