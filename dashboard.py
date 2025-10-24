@@ -11,18 +11,15 @@ import numpy as np
 try:
     from ultralytics import YOLO
     # Peringatan: TensorFlow seringkali harus dimuat secara penuh
-    import tensorflow as tf 
-    from tensorflow.keras.models import load_model 
+    import tensorflow as tf
+    from tensorflow.keras.models import load_model
     
     ML_LIBRARIES_LOADED = True
-    # Menghapus st.warning di sini
 except ImportError:
-    # Mengubah ke st.error dan memastikan status False
     st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
     ML_LIBRARIES_LOADED = False
 
 # --- 2. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
-# ... (Bagian Styling dan CSS tetap sama) ...
 
 st.set_page_config(
     page_title="ROOM INSIGHT",
@@ -30,22 +27,21 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-BG_DARK = "#1A1A2E"              
-CARD_BG = "#2C3E50"              
-TEXT_LIGHT = "#EAEAEA"          
-ACCENT_PRIMARY_NEON = "#4DFFFF" 
-NEON_CYAN = "#00FFFF"            
-NEON_MAGENTA = "#FF00FF"         
-TEXT_CLEAN_LIGHT = NEON_CYAN     
-TEXT_MESSY_LIGHT = NEON_MAGENTA  
-BUTTON_COLOR_NEON = "#3498DB"
+# Palet Warna
+BG_DARK = "#121212"              
+CARD_BG = "#1e1e1e"              
+TEXT_LIGHT = "#F0F0F0"         
+ACCENT_PRIMARY_NEON = "#39FF14"  # Hijau Neon
+NEON_CYAN = "#00FFFF"            # Bersih
+NEON_MAGENTA = "#FF073A"         # Berantakan
+BUTTON_COLOR_NEON = "#39FF14"    # Hijau Neon
 
 custom_css = f"""
 <style>
     /* Definisi Keyframe untuk Efek Neon Flicker */
     @keyframes neon-flicker {{
         0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {{
-            text-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}, 0 0 10px {ACCENT_PRIMARY_NEON}, 0 0 20px {ACCENT_PRIMARY_NEON}, 0 0 40px rgba(77, 255, 255, 0.5);
+            text-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}, 0 0 10px {ACCENT_PRIMARY_NEON}, 0 0 20px {ACCENT_PRIMARY_NEON}, 0 0 40px rgba(57, 255, 20, 0.5);
             opacity: 1;
         }}
         20%, 24%, 55% {{
@@ -61,25 +57,25 @@ custom_css = f"""
     }}
     h1 {{
         color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 2px solid {ACCENT_PRIMARY_NEON};
+        border-bottom: 3px solid {ACCENT_PRIMARY_NEON};
         padding-bottom: 10px;
         animation: neon-flicker 1.8s infinite alternate; 
     }}
     .modern-card {{
         background-color: {CARD_BG};
         border: 1px solid {ACCENT_PRIMARY_NEON};
-        box-shadow: 0 0 15px rgba(77, 255, 255, 0.4);
+        box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
         border-radius: 12px;
         padding: 20px;
         margin-bottom: 20px;
     }}
     h2 {{
         color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 1px solid #34495E;
+        border-bottom: 1px solid #333333;
         padding-bottom: 5px;
     }}
     
-    /* GAYA UPLOADER CYBER */
+    /* GAYA UPLOADER */
     [data-testid="stFileUploader"] {{
         min-height: 150px; 
         padding: 10px 20px 10px 20px !important;
@@ -87,45 +83,27 @@ custom_css = f"""
         border: 2px dashed {ACCENT_PRIMARY_NEON} !important; 
         border-radius: 12px;
         background-color: {BG_DARK} !important; 
-        pointer-events: auto !important;
-    }}
-    [data-testid="stFileUploaderDropzoneInstructions"] p, [data-testid="stFileUploader"] label {{
-        color: {TEXT_LIGHT} !important;
     }}
     
-    /* GAYA TOMBOL 'BROWSE FILES' DI DALAM UPLOADER */
-    [data-testid="stFileUploaderDropzone"] button {{
-        background-color: {CARD_BG} !important;
-        color: {ACCENT_PRIMARY_NEON} !important;
-        font-weight: bold !important;
-        border: 1px solid {ACCENT_PRIMARY_NEON} !important;
-        border-radius: 8px !important;
-        transition: all 0.3s !important;
-        box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON} !important;
-    }}
-    [data-testid="stFileUploaderDropzone"] button:hover {{
-        background-color: #3C5A6C !important;
-        box-shadow: 0 0 10px {ACCENT_PRIMARY_NEON} !important;
-    }}
-    
-    /* Tombol Initiate YOLO V8 Algorithm (Tombol utama non-uploader) */
+    /* GAYA TOMBOL UTAMA */
     .stButton > button:nth-child(1) {{
         background-color: {BUTTON_COLOR_NEON}; 
-        color: {TEXT_LIGHT} !important;
-        font-weight: bold;
+        color: {BG_DARK} !important;
+        font-weight: 900;
         border-radius: 8px;
         border: none;
         transition: all 0.3s;
-        box-shadow: 0 0 10px {NEON_CYAN}, 0 0 20px {NEON_CYAN};
+        box-shadow: 0 0 10px {BUTTON_COLOR_NEON}, 0 0 20px {BUTTON_COLOR_NEON};
     }}
     .stButton > button:nth-child(1):hover {{
-        background-color: #2980B9;
-        box-shadow: 0 0 15px {NEON_CYAN}, 0 0 25px {NEON_CYAN};
+        background-color: #2ECC71; /* Slightly darker green */
+        box-shadow: 0 0 15px {BUTTON_COLOR_NEON}, 0 0 25px {BUTTON_COLOR_NEON};
     }}
 
+    /* STATUS CARD STYLES */
     .status-metric-card {{
         background-color: {CARD_BG};
-        border: 2px solid #34495E;
+        border: 2px solid #333333;
         border-radius: 10px;
         padding: 15px;
         text-align: center;
@@ -133,25 +111,16 @@ custom_css = f"""
         box-shadow: 0 1px 5px rgba(0,0,0,0.3);
     }}
     
-    .clean-status-text {{ color: {TEXT_CLEAN_LIGHT}; font-weight: 900; font-size: 24px; text-shadow: 0 0 5px {TEXT_CLEAN_LIGHT}; }}
-    .messy-status-text {{ color: {TEXT_MESSY_LIGHT}; font-weight: 900; font-size: 24px; text-shadow: 0 0 5px {TEXT_MESSY_LIGHT}; }}
+    .clean-status-text {{ color: {NEON_CYAN}; font-weight: 900; font-size: 36px; text-shadow: 0 0 8px {NEON_CYAN}; }}
+    .messy-status-text {{ color: {NEON_MAGENTA}; font-weight: 900; font-size: 36px; text-shadow: 0 0 8px {NEON_MAGENTA}; }}
     
-    .clean-border {{ border-color: {NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important; }}
-    .messy-border {{ border-color: {NEON_MAGENTA} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 0, 255, 0.6) !important; }}
-    
-    .info-card-clean {{ background-color: {NEON_CYAN}; color: {BG_DARK}; border-color: {NEON_CYAN}; box-shadow: 0 0 8px {NEON_CYAN}; }}
-    .info-card-messy {{ background-color: {NEON_MAGENTA}; color: {BG_DARK}; border-color: {NEON_MAGENTA}; box-shadow: 0 0 8px {NEON_MAGENTA}; }}
-
-    .caption-clean {{ color: {TEXT_CLEAN_LIGHT}; }}
-    .caption-messy {{ color: {TEXT_MESSY_LIGHT}; }}
-
-    p {{ color: {TEXT_LIGHT}; }}
+    .clean-border-visual {{ border: 4px solid {NEON_CYAN} !important; box-shadow: 0 0 20px rgba(0, 255, 255, 0.6) !important; }}
+    .messy-border-visual {{ border: 4px solid {NEON_MAGENTA} !important; box-shadow: 0 0 20px rgba(255, 7, 58, 0.6) !important; }}
     
     .log-container {{
-        background-color: {BG_DARK}; 
+        background-color: {CARD_BG}; 
         color: {TEXT_LIGHT}; 
-        border-color: {ACCENT_PRIMARY_NEON} !important; 
-        box-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
+        border: 1px solid {ACCENT_PRIMARY_NEON} !important;
         padding: 15px;
         border-radius: 8px;
         font-family: 'Consolas', 'Monaco', monospace;
@@ -159,6 +128,9 @@ custom_css = f"""
         height: 140px;
         overflow-y: auto;
     }}
+    
+    .advice-clean {{ background-color: rgba(0, 255, 255, 0.1); border-left: 5px solid {NEON_CYAN}; padding: 10px; border-radius: 5px; }}
+    .advice-messy {{ background-color: rgba(255, 7, 58, 0.1); border-left: 5px solid {NEON_MAGENTA}; padding: 10px; border-radius: 5px; }}
     
 </style>
 """
@@ -173,35 +145,29 @@ if 'processed_image' not in st.session_state:
     st.session_state.processed_image = None
 if 'execution_log_data' not in st.session_state:
     st.session_state.execution_log_data = []
-# Menambahkan state untuk menandai apakah analisis akan dijalankan
-if 'simulation_mode' not in st.session_state:
-    st.session_state.simulation_mode = not ML_LIBRARIES_LOADED
 
 # --- 3. Fungsi Pemuatan Model (Menggunakan Cache Resource Streamlit) ---
 @st.cache_resource
 def load_ml_model():
     """Memuat model YOLO dan CNN ke memori dengan caching."""
-    # Hanya mencoba memuat jika pustaka berhasil diimpor
     if not ML_LIBRARIES_LOADED:
         return None, None
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "model/Siti Naura Khalisa_Laporan 4.pt"
-        CNN_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"
+        YOLO_MODEL_PATH = "Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
+        CNN_MODEL_PATH = "SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
 
         # Model 1: Deteksi Objek (YOLOv8)
         yolo_model = YOLO(YOLO_MODEL_PATH)
         
         # Model 2: Klasifikasi Ruangan (Keras/CNN)
-        # Suppress TensorFlow warnings/messages
         tf.get_logger().setLevel('ERROR')
         cnn_model = load_model(CNN_MODEL_PATH)
         
         return yolo_model, cnn_model
     except Exception as e:
-        # Mengubah ini menjadi error eksplisit
-        st.error(f"FATAL ERROR: Gagal memuat file model dari path. Pastikan file berada di folder 'model/' dan namanya benar: {e}")
+        st.error(f"FATAL ERROR: Gagal memuat file model dari path. Pastikan file berada di direktori yang sama dan namanya benar: {e}")
         return None, None
 
 # --- 4. Fungsi Real Inference dan Pemrosesan Data ---
@@ -218,14 +184,12 @@ def run_yolo_detection(yolo_model, image_path):
         save=False
     )
     
-    # Ambil hasil dari batch pertama (image_path tunggal)
     result = results[0] 
     
     detections = []
     messy_count = 0
     
-    # Mendefinisikan ID Kelas yang dianggap "Messy" (Ganti sesuai nama kelas model Anda)
-    # Contoh: 'Scattered_Clothes' mungkin memiliki class ID 1, 'Trash_Object' ID 5.
+    # Mendefinisikan ID Kelas yang dianggap "Messy" (SESUAIKAN DENGAN MODEL ANDA)
     MESSY_CLASS_NAMES = ["Scattered_Clothes", "Loose_Cables", "Unsorted_Papers", "Trash_Object", "Empty_Bottles", "Food_Wrapper"]
     class_names = result.names # Peta ID ke nama kelas
     
@@ -235,8 +199,13 @@ def run_yolo_detection(yolo_model, image_path):
         x_norm, y_norm, w_norm, h_norm = box.xywhn[0].tolist() 
         conf = box.conf.item() 
         class_id = box.cls.item()
-        label = class_names[int(class_id)]
         
+        # Pengecekan bounds untuk class_id
+        if int(class_id) < len(class_names):
+            label = class_names[int(class_id)]
+        else:
+            label = f"UNKNOWN_CLASS_{int(class_id)}"
+            
         is_messy_item = label in MESSY_CLASS_NAMES
         classification_tag = 'UNOPTIMIZED' if is_messy_item else 'STRUCTURED'
         
@@ -268,16 +237,16 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
     img_array = np.array(image_resized)
-    img_array = np.expand_dims(img_array, axis=0)  # Tambahkan dimensi batch
+    img_array = np.expand_dims(img_array, axis=0) # Tambahkan dimensi batch
     img_array = img_array / 255.0 # Normalisasi
     
     # Prediksi
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
-    # Asumsikan output adalah (Conf_Clean, Conf_Messy). Periksa indeks ini
-    # Ganti urutan indeks ini (0 atau 1) sesuai dengan urutan kelas model CNN Anda
-    conf_clean = predictions[0]  # Ganti indeks ini jika CLEAN bukan kelas 0
-    conf_messy = predictions[1]  # Ganti indeks ini jika MESSY bukan kelas 1
+    # Asumsi output adalah (Conf_Clean, Conf_Messy).
+    # Pastikan urutan ini benar sesuai dengan model Anda.
+    conf_clean = predictions[0]  
+    conf_messy = predictions[1]  
     
     return conf_clean, conf_messy
 
@@ -294,6 +263,7 @@ def draw_boxes_on_image(image_bytes, detections):
     TEXT_RGB = ImageColor.getrgb(BG_DARK)
     
     try:
+        # Atur ukuran font secara dinamis
         font_size = max(15, min(image_width // 40, 30))
         font = ImageFont.load_default(size=font_size) 
     except IOError:
@@ -329,7 +299,6 @@ def draw_boxes_on_image(image_bytes, detections):
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
         except AttributeError:
-            # Fallback untuk versi PIL lama
             text_width, text_height = draw.textsize(text_content, font=font)
             
         text_x = x_min
@@ -373,12 +342,45 @@ def format_execution_log(results, uploaded_file_name):
     
     return '<br>'.join(log_lines)
 
-# --- 6. Fungsi Utama Alur Kerja ML (Menggantikan Simulasi) ---
+def get_advice(is_clean, messy_count, detections):
+    """Memberikan saran berdasarkan hasil analisis."""
+    if is_clean:
+        advice_html = f"""
+        <div class="advice-clean">
+            <h3 style="color: {NEON_CYAN}; margin-top: 0; font-size: 18px;">✨ Protokol Kebersihan Lulus!</h3>
+            <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 0;">Ruangan Anda dalam kondisi **OPTIMAL**. Terus pertahankan organisasi yang sangat baik ini. Tidak ada tindakan segera yang diperlukan.</p>
+            <p style="color: {TEXT_LIGHT}; font-size: 12px; margin-top: 5px; opacity: 0.8;">*Tips Lanjutan: Coba lakukan pembersihan cepat mingguan untuk menjaga momentum!</p>
+        </div>
+        """
+    else:
+        messy_items = [d['asset_id'] for d in detections if d['classification_tag'] == 'UNOPTIMIZED']
+        item_summary = ""
+        
+        # Membuat ringkasan item paling banyak (maks 3 unik)
+        if messy_items:
+            item_counts = pd.Series(messy_items).value_counts()
+            top_items = item_counts.head(3).index.tolist()
+            if len(top_items) == 1:
+                item_summary = f" Fokuskan pada membersihkan **{top_items[0]}**."
+            elif len(top_items) == 2:
+                item_summary = f" Fokuskan pada membersihkan **{top_items[0]}** dan **{top_items[1]}**."
+            else:
+                item_summary = f" Fokuskan pada membersihkan **{top_items[0]}**, **{top_items[1]}**, dan sisa sampah."
+        
+        advice_html = f"""
+        <div class="advice-messy">
+            <h3 style="color: {NEON_MAGENTA}; margin-top: 0; font-size: 18px;">🚨 KODE MERAH: Perlu Tindakan Segera!</h3>
+            <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 0;">Sistem mendeteksi **{messy_count}** aset yang tidak terorganisir. {item_summary}</p>
+            <p style="color: {TEXT_LIGHT}; font-size: 12px; margin-top: 5px; opacity: 0.8;">*Tindakan Cepat: Segera kembalikan barang-barang ke tempatnya atau buang sampah yang terdeteksi.</p>
+        </div>
+        """
+    return advice_html
+
+# --- 6. Fungsi Utama Alur Kerja ML ---
 
 def run_ml_analysis():
-    """Menggantikan simulate_yolo_analysis dengan alur kerja ML yang nyata."""
+    """Menjalankan alur kerja ML yang nyata."""
     
-    # PERHATIAN: Periksa status pustaka sebelum melanjutkan
     if not ML_LIBRARIES_LOADED:
         st.error("Analisis dibatalkan: Pustaka Machine Learning gagal dimuat saat startup.")
         return
@@ -390,7 +392,6 @@ def run_ml_analysis():
     # 1. Muat Model
     yolo_model, cnn_model = load_ml_model()
     
-    # PERHATIAN: Periksa status pemuatan model
     if yolo_model is None or cnn_model is None:
         st.error("Analisis dibatalkan: File Model gagal dimuat dari direktori.")
         return
@@ -410,7 +411,8 @@ def run_ml_analysis():
     image_bytes = st.session_state.uploaded_file.getvalue()
     
     # Simpan file secara sementara untuk dibaca oleh YOLO (YOLOv8 sering membaca dari path)
-    with open("temp_upload.jpg", "wb") as f:
+    temp_path = "temp_upload.jpg"
+    with open(temp_path, "wb") as f:
         f.write(image_bytes)
         
     # --- ALUR KERJA ML NYATA ---
@@ -418,7 +420,7 @@ def run_ml_analysis():
     # A. Model 1: Deteksi Objek (YOLOv8)
     progress_bar.progress(30, text="[Step 1/2] Executing YOLOv8 Detection...")
     try:
-        detections, messy_count = run_yolo_detection(yolo_model, "temp_upload.jpg")
+        detections, messy_count = run_yolo_detection(yolo_model, temp_path)
     except Exception as e:
         st.error(f"Error saat menjalankan Deteksi YOLOv8: {e}")
         progress_bar.empty()
@@ -429,7 +431,6 @@ def run_ml_analysis():
     try:
         conf_clean, conf_messy = run_cnn_classification(cnn_model, image_bytes)
     except Exception as e:
-        # Menangkap error CNN/Dense layer di sini
         st.error(f"Error saat menjalankan Klasifikasi CNN: {e}")
         progress_bar.empty()
         return
@@ -437,9 +438,6 @@ def run_ml_analysis():
     progress_bar.progress(90, text="[Step 2/2] Post-processing results...")
     
     # --- PENENTUAN STATUS AKHIR (Berdasarkan CNN + Hybrid Rule) ---
-    
-    # Ambang batas Aturan Hibrida: Jika 3 atau lebih objek messy terdeteksi oleh YOLO,
-    # kita akan mengesampingkan hasil CNN jika ia mengklasifikasikannya sebagai Clean.
     MESSY_DETECTION_THRESHOLD = 3 
     
     # 1. Penentuan Awal (Berdasarkan CNN)
@@ -459,16 +457,16 @@ def run_ml_analysis():
         
     # 3. Final Status Assignment dan Pesan
     if is_clean:
-        final_status = "STATUS: ROOM CLEAN - OPTIMAL"
-        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {conf_clean_perc}%. Excellent organization. (YOLO Messy Count: {messy_count})."
+        final_status = "STATUS: RUANGAN BERSIH (OPTIMAL)"
+        final_message = f"Integritas Sistem: HIJAU (CYAN NEON). Conf. Kebersihan {conf_clean_perc}%. Organisasi sempurna. (YOLO Messy Count: {messy_count})."
     else:
         # Status MESSY
-        final_status = "STATUS: ROOM MESSY - ALERT"
+        final_status = "STATUS: RUANGAN BERANTAKAN (PERINGATAN)"
         
         if is_overridden:
-            final_message = f"HYBRID OVERRIDE: YOLO detected {messy_count} UNOPTIMIZED assets (Threshold: {MESSY_DETECTION_THRESHOLD}). Final Status: ALERT. (CNN Conf: {conf_clean_perc}% Clean)."
+            final_message = f"HYBRID OVERRIDE: YOLO mendeteksi {messy_count} aset UNOPTIMIZED (Batas: {MESSY_DETECTION_THRESHOLD}). Status Akhir: PERINGATAN. (CNN Conf: {conf_clean_perc}% Clean)."
         else:
-            final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {conf_messy_perc}%. Clutter detected. Recommendation: De-clutter immediately."
+            final_message = f"Integritas Sistem: MERAH (MAGENTA NEON). Conf. Berantakan {conf_messy_perc}%. Kekacauan terdeteksi. Rekomendasi: Segera bereskan."
     
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
@@ -498,34 +496,21 @@ def run_ml_analysis():
     st.success("SYSTEM> Analysis Completed. Report Generated and Visualization Rendered.")
     
 # --- 7. Tata Letak Streamlit (UI) ---
-# ... (Sama seperti file sebelumnya, dengan fungsi simulasi yang diganti) ...
 
 st.markdown(f"""
     <header>
-        <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">CLEAN OR MESSY?</span></h1>
-        <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
-        <!-- PESAN PERINGATAN ASLI DIHAPUS DARI SINI -->
+        <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">DUAL-MODEL CLASSIFIER</span></h1>
+        <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasifikasikan kerapihan ruangan menggunakan model Deteksi Objek (YOLOv8) dan Klasifikasi Gambar (CNN).</p>
     </header>
     <div style="margin-bottom: 20px;"></div>
     """, unsafe_allow_html=True)
 
 
-col_input, col_detection = st.columns([1, 1]) 
+col_main_input, col_main_results = st.columns([1, 2])
 
-with col_input:
+with col_main_input:
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">1. Data Input Matrix</h2>', unsafe_allow_html=True)
-    
-    status_card_class = "info-card-clean" if st.session_state.uploaded_file else "info-card-messy"
-    status_text = "PAYLOAD ACQUIRED" if st.session_state.uploaded_file else "AWAITING PAYLOAD"
-    file_display = st.session_state.uploaded_file.name if st.session_state.uploaded_file else "No file uploaded"
-    
-    st.markdown(f"""
-        <div class="status-metric-card {status_card_class}">
-            <p style="margin: 0; font-weight: bold; font-size: 14px; color:{BG_DARK};">{status_text}</p>
-            <p style="margin: 0; font-size: 14px; font-weight: 500; color:{BG_DARK};">{file_display}</p>
-        </div>
-        """, unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">1. Payload Acquisition</h2>', unsafe_allow_html=True)
 
     uploaded_file = st.file_uploader(
         "Upload Image File (JPG/PNG) | Initiating Payload Protocol", 
@@ -533,41 +518,69 @@ with col_input:
         key="uploader",
         help="Unggah file gambar ruangan untuk dianalisis."
     )
-
     st.session_state.uploaded_file = uploaded_file
 
     st.markdown('</div>', unsafe_allow_html=True) 
-    
+
     st.markdown('<div style="padding-top: 20px;">', unsafe_allow_html=True)
     
-    # Tombol dinonaktifkan jika tidak ada file yang diunggah ATAU jika pustaka ML gagal dimuat
     button_disabled = st.session_state.uploaded_file is None or not ML_LIBRARIES_LOADED
     
     if st.button("⚡ INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
-        # PANGGIL FUNGSI ML NYATA
         run_ml_analysis() 
         
     st.markdown('</div>', unsafe_allow_html=True)
+    
+    # CONFIDENCE METRICS (Pindahkan ke Input Column)
+    results = st.session_state.analysis_results
+    if results:
+        st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 18px; margin-top: 20px;">Confidence Score (CNN)</h3>', unsafe_allow_html=True)
+        col_conf_clean, col_conf_messy = st.columns(2)
 
+        with col_conf_clean:
+            st.markdown(f"""
+                <div class="status-metric-card" style="border-color: {NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_CYAN};">
+                    <p style="color: {NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CLEAN</p>
+                    <p style="color: {TEXT_LIGHT}; font-size: 24px; font-weight: bold;">{results["conf_clean"]}%</p>
+                </div>
+                """, unsafe_allow_html=True)
+        
+        with col_conf_messy:
+            st.markdown(f"""
+                <div class="status-metric-card" style="border-color: {NEON_MAGENTA}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_MAGENTA};">
+                    <p style="color: {NEON_MAGENTA}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">MESSY</p>
+                    <p style="color: {TEXT_LIGHT}; font-size: 24px; font-weight: bold;">{results["conf_messy"]}%</p>
+                </div>
+                """, unsafe_allow_html=True)
 
-with col_detection:
+with col_main_results:
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">2. Live Detection Grid </h2>', unsafe_allow_html=True)
-
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">2. Visualization & Final Status</h2>', unsafe_allow_html=True)
+    
     border_class = ""
-    caption_text = "Awaiting Image Payload"
-    caption_style = ACCENT_PRIMARY_NEON
+    status_text = "Awaiting Image Payload"
+    status_color = ACCENT_PRIMARY_NEON
     
     if st.session_state.analysis_results is not None:
-        border_class = 'clean-border' if st.session_state.analysis_results['is_clean'] else 'messy-border'
-        caption_text = 'BOUNDING BOXES: (Rendered Status Visualization)'
-        caption_style = NEON_CYAN if st.session_state.analysis_results['is_clean'] else NEON_MAGENTA
+        results = st.session_state.analysis_results
+        border_class = 'clean-border-visual' if results['is_clean'] else 'messy-border-visual'
+        status_main_text = results['final_status'].split(': ')[1]
+        css_class_status = 'clean-status-text' if results['is_clean'] else 'messy-status-text'
+        status_text = f'FINAL STATUS: <span class="{css_class_status}">{status_main_text}</span>'
+        
+        # Display Final Status Box
+        st.markdown(f"""
+            <div class="status-metric-card" style="margin-top: -10px; border-color: {'#00FFFF' if results['is_clean'] else '#FF073A'};">
+                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">{results['final_message'].split(':')[0]} (YOLO Messy Count: {results['messy_count']})</p>
+                <p style="margin: 0;">{status_text}</p>
+            </div>
+            """, unsafe_allow_html=True)
+        
     elif st.session_state.uploaded_file:
-        caption_text = 'BOUNDING BOXES: (Ready for Analysis - Click Initiate)'
-        caption_style = ACCENT_PRIMARY_NEON
-
+        status_text = "Image Loaded. Click Initiate Analysis."
+        
     st.markdown(f"""
-        <div style="border: 4px solid #34495E; border-radius: 10px; padding: 5px; background-color: {BG_DARK};" class="{border_class}">
+        <div style="border: 2px solid #34495E; border-radius: 10px; padding: 5px; background-color: {BG_DARK};" class="{border_class}">
         """, unsafe_allow_html=True)
 
     if st.session_state.uploaded_file:
@@ -575,108 +588,66 @@ with col_detection:
             st.image(st.session_state.processed_image, caption='VISUALIZATION: Live Detection Grid (YOLO v8 Output)', use_container_width=True)
         else:
             image_data = st.session_state.uploaded_file.getvalue()
-            st.image(image_data, caption='Image Data Stream (Original)', use_container_width=True)
-            
-        st.markdown(f'<p style="text-align: center; color: {caption_style}; font-weight: bold; margin-top: 10px; text-shadow: 0 0 3px {caption_style};">'
-                    f'{caption_text}</p>', unsafe_allow_html=True)
+            st.image(image_data, caption='Image Data Stream (Original) - Click Analysis to Process', use_container_width=True)
     else:
-        st.image("https://placehold.co/1200x675/1A1A2E/4DFFFF?text=UPLOAD+IMAGE+TO+ACTIVATE+SCANNER+MODULE", caption="Awaiting Image Payload", use_container_width=True)
+        st.image("https://placehold.co/1200x675/121212/39FF14?text=UPLOAD+IMAGE+TO+ACTIVATE+SCANNER+MODULE", caption="Awaiting Image Payload", use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 
-st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_NEON}; box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True) 
-
-# --- TAMPILAN 2: EXECUTION REPORT & METRICS ---
-st.markdown('<div class="modern-card" style="margin-top: 30px;">', unsafe_allow_html=True)
-st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON}; border-bottom: 2px solid {ACCENT_PRIMARY_NEON}; padding-bottom: 10px;">Execution Report & Metrics</h2>', unsafe_allow_html=True)
-
-results = st.session_state.analysis_results
-
-col_report, col_clean_conf, col_messy_conf = st.columns([2, 1, 1])
-
-if results:
-    status_main_text = results['final_status'].split(': ')[1]
-    css_class_status = 'clean-status-text' if results['is_clean'] else 'messy-status-text'
-    message = results['final_message']
-    
-    with col_report:
-        border_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {border_color}; box-shadow: 0 0 10px {border_color};">
-                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">CLASSIFICATION REPORT (Final Status)</p>
-                <p class="{css_class_status}" style="font-size: 32px; margin-top: 5px;">{status_main_text}</p>
-                <p style="font-size: 12px; color: {TEXT_LIGHT}; opacity: 0.7;">{message}</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-    with col_clean_conf:
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_CYAN};">
-                <p style="color: {NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
-            </div>
-            """, unsafe_allow_html=True)
-        
-    with col_messy_conf:
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {NEON_MAGENTA}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_MAGENTA};">
-                <p style="color: {NEON_MAGENTA}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: MESSY</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
-            </div>
-            """, unsafe_allow_html=True)
-
-else:
-    st.markdown(f"""
-        <div style="text-align: center; padding: 40px; border: 2px dashed {ACCENT_PRIMARY_NEON}; border-radius: 10px; background-color: {CARD_BG};">
-            <h3 style="font-size: 24px; color:{ACCENT_PRIMARY_NEON};">METRICS AWAITING INFERENCE</h3>
-            <p style="font-size: 16px; color: {TEXT_LIGHT};">Upload image and click 'INITIATE DUAL-MODEL ANALYSIS' to generate report.</p>
-            {f'<p style="color: {NEON_MAGENTA}; font-weight: bold;">(STATUS: Mode Inferensi Nyata dinonaktifkan karena kegagalan pemuatan ML Library)</p>' if not ML_LIBRARIES_LOADED else ''}
-        </div>
-    """, unsafe_allow_html=True)
-
-
-st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Log Eksekusi Model Ganda (Dual-Model Execution Log)</h3>', unsafe_allow_html=True)
-
-log_content = ""
-if results:
-    log_content = st.session_state.execution_log_data
-else:
-    log_content = f"""[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting Input Payload.<br>
-[{time.strftime('%H:%M:%S')}] DATA: No active payload detected. <br>
-[{time.strftime('%H:%M:%S')}] MODEL: Detection Model (<b>Siti Naura Khalisa_Laporan 4.pt</b>) and Classification Model (<b>SitiNauraKhalisa_Laporan2.h5</b>) are idle."""
-    if not ML_LIBRARIES_LOADED:
-        log_content += f"""<br>[{time.strftime('%H:%M:%S')}] <span style='color:{NEON_MAGENTA};'>FATAL: ML Libraries not loaded. All analysis requests will be denied.</span>"""
-
-
-st.markdown(f"""
-    <div class="log-container">
-        {log_content}
-    </div>
-    """, unsafe_allow_html=True)
-
-st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Tabel Detail Aset Terdeteksi ({results["detection_model"] if results else "..."})</h3>', unsafe_allow_html=True)
+# --- FITUR BARU: Quick Action Terminal ---
+st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_NEON}; box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+st.markdown('<div class="modern-card">', unsafe_allow_html=True)
+st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">3. Quick Action Terminal (Rekomendasi)</h2>', unsafe_allow_html=True)
 
 if st.session_state.analysis_results:
-    df = pd.DataFrame(st.session_state.analysis_results['detections'])
-    df = df.rename(columns={
-        'asset_id': 'Asset ID (Deteksi)', 
-        'confidence_score': 'Conf. Deteksi (%)', 
-        'classification_tag': 'Tag Kerapihan',
-        'normalized_coordinates': 'Koordinat Norm. (x, y, w, h)'
-    })
-    df['Conf. Deteksi (%)'] = (df['Conf. Deteksi (%)'] * 100).round(2).astype(str) + '%'
-    
-    st.dataframe(
-        df, 
-        use_container_width=True,
-        height=250 
-    )
-
+    results = st.session_state.analysis_results
+    st.markdown(get_advice(results['is_clean'], results['messy_count'], results['detections']), unsafe_allow_html=True)
 else:
-    st.info("Tabel detail akan muncul setelah analisis berhasil dijalankan.")
-
+    st.info("Saran pembersihan akan ditampilkan di sini setelah analisis selesai.")
+    
 st.markdown('</div>', unsafe_allow_html=True)
+    
+# --- TAMPILAN 4: EXECUTION LOG & DETAILED TABLE (Sebagai Detail Lanjutan) ---
+st.markdown(f"<hr style='border-top: 1px dashed #333333; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+
+col_log, col_table = st.columns(2)
+
+with col_log:
+    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; border-bottom: 1px solid #333333; padding-bottom: 5px;">Execution Log</h3>', unsafe_allow_html=True)
+    
+    log_content = ""
+    if st.session_state.analysis_results:
+        log_content = st.session_state.execution_log_data
+    else:
+        log_content = f"""[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting Input Payload.<br>
+[{time.strftime('%H:%M:%S')}] MODEL: Dual-Model System Idle. ({'ML Libraries NOT loaded' if not ML_LIBRARIES_LOADED else 'ML Libraries loaded'})"""
+
+    st.markdown(f"""
+        <div class="log-container">
+            {log_content}
+        </div>
+        """, unsafe_allow_html=True)
+
+with col_table:
+    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; border-bottom: 1px solid #333333; padding-bottom: 5px;">Detected Asset Detail (YOLO)</h3>', unsafe_allow_html=True)
+
+    if st.session_state.analysis_results:
+        df = pd.DataFrame(st.session_state.analysis_results['detections'])
+        df = df.rename(columns={
+            'asset_id': 'Asset ID', 
+            'confidence_score': 'Conf. Deteksi (%)', 
+            'classification_tag': 'Tag Kerapihan',
+            'normalized_coordinates': 'Koordinat Norm.'
+        })
+        df['Conf. Deteksi (%)'] = (df['Conf. Deteksi (%)'] * 100).round(2).astype(str) + '%'
+        
+        st.dataframe(
+            df, 
+            use_container_width=True,
+            height=140 
+        )
+
+    else:
+        st.info("Tabel aset akan muncul di sini.")
