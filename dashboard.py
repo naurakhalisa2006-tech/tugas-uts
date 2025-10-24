@@ -519,7 +519,7 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
     """Menghasilkan konten HTML untuk tips atau apresiasi."""
     if is_clean:
         return {
-            "title": "✅ STATUS OPTIMAL: APRESIASI KERAPIHAN",
+            "title": "✅ STATUS OPTIMAL: APRESIASI",
             "icon": "✨",
             "color": ACCENT_NEON_CYAN,
             "content": f"""
