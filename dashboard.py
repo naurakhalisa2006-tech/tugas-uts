@@ -625,7 +625,7 @@ def render_report_page():
         """, unsafe_allow_html=True)
 
     # --- 1. GAMBAR YANG DIUNGGAH (ATAS) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Visualisasi Deteksi Objek</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Deteksi Objek</h2>', unsafe_allow_html=True)
 
     border_class = 'clean-border' if results['is_clean'] else 'messy-border'
     
@@ -644,7 +644,7 @@ def render_report_page():
     st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
 
     # --- 2. KLASIFIKASI FINAL STATUS (UTAMA) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">2. Final Classification Status</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Classification Status</h2>', unsafe_allow_html=True)
 
     col_report, col_clean_conf, col_messy_conf = st.columns([2, 1, 1])
 
@@ -683,7 +683,7 @@ def render_report_page():
     st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
     
     # --- 3. TIPS / APRESIASI ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">3. Tindakan Rekomendasi</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Rekomendasi</h2>', unsafe_allow_html=True)
     
     tips = get_tips_and_appreciation(results['is_clean'], results['messy_count'], results.get('is_overridden', False))
     
@@ -693,9 +693,6 @@ def render_report_page():
             {tips['content']}
         </div>
         """, unsafe_allow_html=True)
-
-    # --- 4. LOG DAN DETAIL TABEL (DIHAPUS SESUAI PERMINTAAN) ---
-    # Bagian ini dikosongkan/dihapus
 
     # Tombol untuk kembali
     st.button("↩ BACK", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
