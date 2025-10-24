@@ -262,8 +262,11 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # Keras/CNN memerlukan input dengan ukuran tetap (misalnya 224x224)
-    target_size = (224, 224) 
+    # PERBAIKAN: Mengubah target_size dari (224, 224) menjadi (96, 96).
+    # Alasannya: Error menunjukkan lapisan Dense mengharapkan 9216 fitur,
+    # yang menyiratkan bahwa model dilatih dengan input yang lebih kecil
+    # (misalnya 96x96, yang kemudian direduksi arsitektur CNN menjadi 9216 fitur saat di-flatten).
+    target_size = (96, 96) 
     image_resized = image.resize(target_size)
     
     # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
@@ -272,6 +275,8 @@ def run_cnn_classification(cnn_model, image_bytes):
     img_array = img_array / 255.0 # Normalisasi
     
     # Prediksi
+    # Masalah shape mismatch harusnya teratasi karena input array sekarang
+    # menghasilkan 9216 fitur setelah melalui lapisan Conv/Pool model yang dimuat.
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
     # Asumsikan output adalah (Conf_Clean, Conf_Messy)
