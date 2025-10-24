@@ -32,7 +32,7 @@ CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
 ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
-ACCENT_NEON_CYAN = "#00FFFF"    # Neon Cyan (Clean Status)    
+ACCENT_NEON_CYAN = "#00FFFF"    # Neon Cyan (Clean Status)  
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
@@ -523,12 +523,12 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
             "icon": "✨",
             "color": ACCENT_NEON_CYAN,
             "content": f"""
-                <p>Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada <b>ASET TIDAK OPTIMAL</b> (jumlah: {messy_count}).</p>
-                <p><b>Tips Maintenance:</b></p>
+                <p>Woohoo! 🎉 Ruanganmu **Super Rapi dan Manis!** Sistem kami mendeteksi sangat sedikit (hanya **{messy_count}**) *Aset Tidak Optimal*. Kamu hebat banget dalam menjaga kebersihan!</p>
+                <p><b>✨ Tips Biar Tetap Sparkling ✨</b></p>
                 <ul>
-                    <li>Lanjutkan dengan prinsip 'Less is More': Pastikan setiap barang memiliki tempatnya yang spesifik.</li>
-                    <li>Audit Digital: Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.</li>
-                    <li>Sistem 5 Menit: Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.</li>
+                    <li>**The One-Touch Rule:** Setiap barang yang kamu ambil/sentuh, langsung kembalikan ke tempatnya. Praktis!</li>
+                    <li>**Declutter Harian:** Cuma butuh 5 menit sebelum tidur! Rapikan apa pun yang berserakan di permukaan meja atau lantai.</li>
+                    <li>**Sweet Storage:** Coba *upgrade* tempat penyimpananmu dengan kotak atau keranjang yang lucu. Kerapian jadi makin menyenangkan!</li>
                 </ul>
             """
         }
@@ -544,12 +544,12 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
             "color": ACCENT_PINK_MESSY,
             "content": f"""
                 {override_note}
-                <p>Ruangan Anda teridentifikasi sebagai <b>TIDAK OPTIMAL / BERANTAKAN</b>. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi <b>{messy_count} item TIDAK OPTIMAL</b>.</p>
-                <p><b>Rekomendasi Tindakan (De-Clutter Protocol):</b></p>
+                <p>Ups! 🥺 Ruanganmu teridentifikasi **Sedikit Berantakan** dan butuh *love* sedikit, nih. Model Deteksi kami menemukan **{messy_count} Aset Tidak Optimal** yang bikin ruanganmu kurang maksimal.</p>
+                <p><b>💖 Ayo Rapikan (Mission De-Clutter) 💖</b></p>
                 <ul>
-                    <li>Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti **Pakaian Berserakan** atau **Kertas Tidak Teratur**).</li>
-                    <li>Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.</li>
-                    <li>Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.</li>
+                    <li>**Fokus Kecil:** Jangan langsung membersihkan semua! Mulai dari item yang paling menonjol (seperti Pakaian Berserakan atau Kertas Tidak Teratur yang terdeteksi). Satu per satu, ya!</li>
+                    <li>**Keranjang Ajaib:** Siapkan keranjang khusus untuk barang-barang yang sering kamu pakai. Jadi, begitu selesai, barang itu langsung masuk keranjang, nggak bingung nyari!</li>
+                    <li>**Foto Ulang:** Setelah selesai merapikan, *re-scan* foto ruanganmu. Kita lihat seberapa besar perubahannya. Semangat!</li>
                 </ul>
             """
         }
