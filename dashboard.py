@@ -16,6 +16,7 @@ try:
     
     ML_LIBRARIES_LOADED = True
 except ImportError:
+    # st.warning("Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Aplikasi akan berjalan dalam mode SIMULASI yang ditingkatkan.") # Dihapus agar tidak konflik
     ML_LIBRARIES_LOADED = False
 
 # --- 2. Konfigurasi dan Styling (Tema Cute Vision AI / Girly Pastel) ---
@@ -35,6 +36,9 @@ ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
+# TAMBAHAN BARU: Light Blue Glow sesuai permintaan
+ACCENT_LIGHT_BLUE = "#88AAFF" # Soft, light sky blue/periwinkle
+
 TEXT_CLEAN_STATUS = ACCENT_PURPLE
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
@@ -53,17 +57,18 @@ custom_css = f"""
         }}
     }}
 
-    /* --- KEYFRAME BARU: SOFT CORAL PINK & WHITE GLOW (Sesuai Permintaan) --- */
+    /* --- KEYFRAME BARU: SOFT CORAL PINK & LIGHT BLUE GLOW --- */
+    /* Menggunakan ACCENT_LIGHT_BLUE sebagai glow sekunder */
     @keyframes soft-coral-glow {{
         0%, 100% {{
-            /* Soft Coral Pink shadow + very faint white background glow */
-            text-shadow: 0 0 7px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG};
+            /* Soft Coral Pink shadow + Light Blue glow */
+            text-shadow: 0 0 7px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_LIGHT_BLUE};
             color: {TEXT_DARK};
             opacity: 0.9;
         }}
         50% {{
             /* Brighter glow at midpoint, color pulses to the pink accent */
-            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PRIMARY_PINK}, 0 0 40px {CARD_BG};
+            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PRIMARY_PINK}, 0 0 40px {ACCENT_LIGHT_BLUE};
             color: {ACCENT_PRIMARY_PINK}; 
             opacity: 1;
         }}
