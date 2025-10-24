@@ -9,19 +9,16 @@ import pandas as pd
 import numpy as np
 
 # --- 1. Import Pustaka Machine Learning (Hanya akan berfungsi jika diinstal) ---
-# Menggunakan penanda global untuk membedakan mode simulasi/nyata
 try:
     from ultralytics import YOLO
     import tensorflow as tf
     from tensorflow.keras.models import load_model
     
     ML_LIBRARIES_LOADED = True
-    # Menghapus st.warning di sini
 except ImportError:
-    # Mengubah ke st.error dan memastikan status False
     ML_LIBRARIES_LOADED = False
 
-# --- 2. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
+# --- 2. Konfigurasi dan Styling (Tema Cute Vision AI / Girly Pastel) ---
 
 st.set_page_config(
     page_title="ROOM INSIGHT",
@@ -29,151 +26,137 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-BG_DARK = "#1A1A2E"             
-CARD_BG = "#2C3E50"             
-TEXT_LIGHT = "#EAEAEA"          
-ACCENT_PRIMARY_NEON = "#4DFFFF" 
-NEON_CYAN = "#00FFFF"           
-NEON_MAGENTA = "#FF00FF"        
-TEXT_CLEAN_LIGHT = NEON_CYAN    
-TEXT_MESSY_LIGHT = NEON_MAGENTA 
-BUTTON_COLOR_NEON = "#3498DB"
+# Palet Warna Cute Vision AI
+BG_LIGHT = "#F0F0FF"            # Very Light Lavender/White
+CARD_BG = "#FFFFFF"             # Soft White Card Background
+TEXT_DARK = "#333333"           # Main text color (Dark)
+ACCENT_PRIMARY_PINK = "#FF88AA" # Soft Coral Pink (Main Accent)
+ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
+ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
+BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
+
+TEXT_CLEAN_STATUS = ACCENT_PURPLE
+TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
 <style>
-    /* Definisi Keyframe untuk Efek Neon Flicker */
-    @keyframes neon-flicker {{
-        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {{
-            text-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}, 0 0 10px {ACCENT_PRIMARY_NEON}, 0 0 20px {ACCENT_PRIMARY_NEON}, 0 0 40px rgba(77, 255, 255, 0.5);
-            opacity: 1;
+    /* Definisi Keyframe untuk Efek Soft Glow */
+    @keyframes soft-glow {{
+        0% {{
+            box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
         }}
-        20%, 24%, 55% {{
-            text-shadow: 0 0 2px {ACCENT_PRIMARY_NEON}, 0 0 5px {ACCENT_PRIMARY_NEON};
-            opacity: 0.9;
+        50% {{
+            box-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK};
+        }}
+        100% {{
+            box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
         }}
     }}
 
     .stApp {{
-        background-color: {BG_DARK};
-        color: {TEXT_LIGHT};
+        background-color: {BG_LIGHT};
+        color: {TEXT_DARK};
         font-family: 'Inter', sans-serif;
     }}
     h1 {{
-        color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 2px solid {ACCENT_PRIMARY_NEON};
+        color: {ACCENT_PRIMARY_PINK};
+        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
         padding-bottom: 10px;
-        animation: neon-flicker 1.8s infinite alternate; 
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }}
     .modern-card {{
         background-color: {CARD_BG};
-        border: 1px solid {ACCENT_PRIMARY_NEON};
-        box-shadow: 0 0 15px rgba(77, 255, 255, 0.4);
-        border-radius: 12px;
-        padding: 20px;
-        margin-bottom: 20px;
+        border: 1px solid {ACCENT_PRIMARY_PINK};
+        box-shadow: 0 4px 15px rgba(255, 136, 170, 0.4);
+        border-radius: 18px; /* Lebih rounded */
+        padding: 25px;
+        margin-bottom: 25px;
     }}
     h2 {{
-        color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 1px solid #34495E;
+        color: {ACCENT_PRIMARY_PINK};
+        border-bottom: 1px solid #DDDDDD;
         padding-bottom: 5px;
     }}
     
-    /* GAYA UPLOADER CYBER */
+    /* GAYA UPLOADER CUTE */
     [data-testid="stFileUploader"] {{
         min-height: 200px; 
-        padding: 10px 20px 10px 20px !important;
-        margin-top: 10px;
-        border: 2px dashed {ACCENT_PRIMARY_NEON} !important; 
-        border-radius: 12px;
-        background-color: {BG_DARK} !important; 
+        padding: 15px 25px 15px 25px !important;
+        margin-top: 15px;
+        border: 3px dashed {ACCENT_PRIMARY_PINK} !important; 
+        border-radius: 18px;
+        background-color: {CARD_BG} !important; 
         pointer-events: auto !important;
+        box-shadow: 0 2px 10px rgba(255, 136, 170, 0.3);
     }}
     [data-testid="stFileUploaderDropzoneInstructions"] p, [data-testid="stFileUploader"] label {{
-        color: {TEXT_LIGHT} !important;
+        color: {TEXT_DARK} !important;
+        font-weight: 500;
     }}
     
     /* GAYA TOMBOL 'BROWSE FILES' DI DALAM UPLOADER */
     [data-testid="stFileUploaderDropzone"] button {{
-        background-color: {CARD_BG} !important;
-        color: {ACCENT_PRIMARY_NEON} !important;
+        background-color: {ACCENT_PRIMARY_PINK} !important;
+        color: {CARD_BG} !important;
         font-weight: bold !important;
-        border: 1px solid {ACCENT_PRIMARY_NEON} !important;
-        border-radius: 8px !important;
+        border: none !important;
+        border-radius: 10px !important;
         transition: all 0.3s !important;
-        box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON} !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
     }}
     [data-testid="stFileUploaderDropzone"] button:hover {{
-        background-color: #3C5A6C !important;
-        box-shadow: 0 0 10px {ACCENT_PRIMARY_NEON} !important;
+        background-color: {ACCENT_PINK_MESSY} !important;
+        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
     }}
     
-    /* Tombol Initiate YOLO V8 Algorithm (Tombol utama non-uploader) */
+    /* Tombol Initiate Dual-Model Analysis (Tombol utama non-uploader) */
     .stButton > button:nth-child(1) {{
-        background-color: {BUTTON_COLOR_NEON}; 
-        color: {TEXT_LIGHT} !important;
+        background-color: {BUTTON_COLOR_SOFT}; 
+        color: {TEXT_DARK} !important;
         font-weight: bold;
-        border-radius: 8px;
+        border-radius: 15px;
         border: none;
         transition: all 0.3s;
-        box-shadow: 0 0 10px {NEON_CYAN}, 0 0 20px {NEON_CYAN};
-        height: 50px;
+        box-shadow: 0 4px 10px rgba(255, 179, 217, 0.6);
+        height: 55px;
         font-size: 18px;
+        animation: soft-glow 3s infinite alternate;
     }}
     .stButton > button:nth-child(1):hover {{
-        background-color: #2980B9;
-        box-shadow: 0 0 15px {NEON_CYAN}, 0 0 25px {NEON_CYAN};
+        background-color: {ACCENT_PRIMARY_PINK};
+        color: {CARD_BG} !important;
+        box-shadow: 0 6px 15px rgba(255, 179, 217, 0.8);
     }}
 
     /* Tombol Kembali (Return Button) */
     .stButton > button[data-testid="stElement" i]:not(:nth-child(1)) {{
         background-color: {CARD_BG}; 
-        color: {ACCENT_PRIMARY_NEON} !important;
-        border: 1px solid {ACCENT_PRIMARY_NEON} !important;
-        box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON};
+        color: {ACCENT_PRIMARY_PINK} !important;
+        border: 2px solid {ACCENT_PRIMARY_PINK} !important;
+        box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK};
+        border-radius: 10px;
         margin-top: 20px;
     }}
 
-
     .status-metric-card {{
         background-color: {CARD_BG};
-        border: 2px solid #34495E;
-        border-radius: 10px;
-        padding: 15px;
+        border: 2px solid #EEEEEE;
+        border-radius: 15px;
+        padding: 20px;
         text-align: center;
         margin-bottom: 15px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.3);
+        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
     }}
     
-    .clean-status-text {{ color: {TEXT_CLEAN_LIGHT}; font-weight: 900; font-size: 28px; text-shadow: 0 0 5px {TEXT_CLEAN_LIGHT}; }}
-    .messy-status-text {{ color: {TEXT_MESSY_LIGHT}; font-weight: 900; font-size: 28px; text-shadow: 0 0 5px {TEXT_MESSY_LIGHT}; }}
+    .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
+    .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
     
-    .clean-border {{ border-color: {NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important; }}
-    .messy-border {{ border-color: {NEON_MAGENTA} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 0, 255, 0.6) !important; }}
-    
-    .info-card-clean {{ background-color: {NEON_CYAN}; color: {BG_DARK}; border-color: {NEON_CYAN}; box-shadow: 0 0 8px {NEON_CYAN}; }}
-    .info-card-messy {{ background-color: {NEON_MAGENTA}; color: {BG_DARK}; border-color: {NEON_MAGENTA}; box-shadow: 0 0 8px {NEON_MAGENTA}; }}
-
-    .caption-clean {{ color: {TEXT_CLEAN_LIGHT}; }}
-    .caption-messy {{ color: {TEXT_MESSY_LIGHT}; }}
-
-    p {{ color: {TEXT_LIGHT}; }}
-    
-    .log-container {{
-        background-color: {BG_DARK}; 
-        color: {TEXT_LIGHT}; 
-        border-color: {ACCENT_PRIMARY_NEON} !important; 
-        box-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
-        padding: 15px;
-        border-radius: 8px;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 13px;
-        height: 140px;
-        overflow-y: auto;
-    }}
+    .clean-border {{ border-color: {ACCENT_PURPLE} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
+    .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
     
     .tips-box {{
-        padding: 20px;
-        border-radius: 12px;
+        padding: 25px;
+        border-radius: 18px;
         margin-top: 30px;
         margin-bottom: 30px;
         border-left: 5px solid;
@@ -186,10 +169,14 @@ custom_css = f"""
         border-bottom: none;
     }}
     .tips-box ul {{
-        list-style-type: square;
+        list-style-type: '💖 '; /* Cute List Style */
         padding-left: 20px;
-        color: {TEXT_LIGHT};
+        color: {TEXT_DARK};
     }}
+    p {{ color: {TEXT_DARK}; }}
+
+    /* Menyembunyikan log container karena tidak digunakan lagi */
+    .log-container {{ display: none; }}
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -202,7 +189,8 @@ if 'analysis_results' not in st.session_state:
 if 'processed_image' not in st.session_state:
     st.session_state.processed_image = None
 if 'execution_log_data' not in st.session_state:
-    st.session_state.execution_log_data = []
+    # Cukup set string placeholder karena log tidak ditampilkan
+    st.session_state.execution_log_data = "Log display is disabled."
 if 'app_state' not in st.session_state:
     st.session_state.app_state = 'UPLOAD' # Mengelola navigasi
 
@@ -309,7 +297,7 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     return conf_clean, conf_messy
 
-# --- 5. Fungsi Utilitas Visualisasi dan Log (TETAP SAMA) ---
+# --- 5. Fungsi Utilitas Visualisasi (format_execution_log dihapus) ---
 
 def draw_boxes_on_image(image_bytes, detections):
     """Menggambar Bounding Box Neon pada Gambar dari hasil deteksi."""
@@ -317,9 +305,10 @@ def draw_boxes_on_image(image_bytes, detections):
     draw = ImageDraw.Draw(image)
     image_width, image_height = image.size
     
-    CLEAN_RGB = ImageColor.getrgb(NEON_CYAN)
-    MESSY_RGB = ImageColor.getrgb(NEON_MAGENTA)
-    TEXT_RGB = ImageColor.getrgb(BG_DARK)
+    # Menggunakan warna tema baru
+    CLEAN_RGB = ImageColor.getrgb(ACCENT_PURPLE)
+    MESSY_RGB = ImageColor.getrgb(ACCENT_PINK_MESSY)
+    TEXT_BG_RGB = ImageColor.getrgb(CARD_BG) # Teks hitam di atas kotak putih/terang
     
     try:
         font_size = max(15, min(image_width // 40, 30))
@@ -366,39 +355,13 @@ def draw_boxes_on_image(image_bytes, detections):
             text_y = y_max + 5
             
         draw.rectangle([text_x, text_y, text_x + text_width + 5, text_y + text_height + 5], fill=box_rgb)
-        draw.text((text_x + 2, text_y + 2), text_content, font=font, fill=TEXT_RGB) 
+        draw.text((text_x + 2, text_y + 2), text_content, font=font, fill=TEXT_BG_RGB) 
         
     buf = io.BytesIO()
     image.save(buf, format='JPEG')
     return buf.getvalue()
 
-def format_execution_log(results, uploaded_file_name):
-    """Membuat format log tekstual yang menyerupai output konsol"""
-    log_lines = []
-    
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] INFO: System Initialized.")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 4))}] DATA: Payload Acquired: {uploaded_file_name}.")
-
-    # Log Model 1: Deteksi
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 3))}] MODEL-DETECTION: Loading <b>{results['detection_model']}</b> (YOLO V8).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 2))}] INFERENCE-YOLO: Detecting {len(results['detections'])} Assets. Messy Count: {results['messy_count']}.")
-    
-    # Log Model 2: Klasifikasi
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete.")
-    
-    # Log Hybrid Rule
-    tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
-    final_status_report = "REPORT"
-    
-    if results.get('is_overridden'):
-        log_lines.append(f"[{time.strftime('%H:%M:%S')}] <span style='color:{NEON_MAGENTA};'>WARNING: Hybrid Rule Triggered! Overriding CNN result due to high messy count ({results['messy_count']}).</span>")
-        final_status_report = "OVERRIDE-REPORT"
-    
-    final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] {final_status_report}: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span> (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%).")
-    
-    return '<br>'.join(log_lines)
+# Fungsi format_execution_log dihapus
 
 # --- 6. Fungsi Utama Alur Kerja ML (Disesuaikan untuk navigasi) ---
 
@@ -425,12 +388,12 @@ def run_ml_analysis():
     # Reset hasil
     st.session_state.analysis_results = None
     st.session_state.processed_image = None
-    st.session_state.execution_log_data = []
-
+    st.session_state.execution_log_data = "Log display is disabled." # Tetap set string placeholder
+    
     
     # Placeholder log dan progress bar
     log_placeholder = st.empty()
-    log_placeholder.markdown(f'<p style="color: {TEXT_LIGHT};">SYSTEM> Initiating inference. Loading models...</p>', unsafe_allow_html=True)
+    log_placeholder.markdown(f'<p style="color: {TEXT_DARK};">SYSTEM> Initiating inference. Loading models...</p>', unsafe_allow_html=True)
     
     progress_bar = st.progress(0, text="Loading Tensor Core & Running Inference...")
     
@@ -480,15 +443,15 @@ def run_ml_analysis():
         is_overridden = True
     
     if is_clean:
-        final_status = "STATUS: ROOM CLEAN - OPTIMAL"
-        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {round(conf_clean * 100, 2)}%. Excellent organization. (YOLO Messy Count: {messy_count})."
+        final_status = "STATUS: RUANGAN RAPI - OPTIMAL" # Diterjemahkan
+        final_message = f"Pemeriksaan Integritas Sistem: HIJAU (LILAC). Kepercayaan kebersihan {round(conf_clean * 100, 2)}%. Organisasi yang luar biasa. (YOLO Messy Count: {messy_count})."
     else:
-        final_status = "STATUS: ROOM MESSY - ALERT"
+        final_status = "STATUS: RUANGAN BERANTAKAN - PERINGATAN" # Diterjemahkan
         
         if is_overridden:
-            final_message = f"HYBRID OVERRIDE: YOLO detected {messy_count} UNOPTIMIZED assets (Threshold: {MESSY_DETECTION_THRESHOLD}). Final Status: ALERT. (CNN Conf: {round(conf_clean * 100, 2)}% Clean)."
+            final_message = f"HYBRID OVERRIDE: YOLO mendeteksi {messy_count} aset TIDAK OPTIMAL (Ambang batas: {MESSY_DETECTION_THRESHOLD}). Status Akhir: PERINGATAN. (CNN Conf: {round(conf_clean * 100, 2)}% Rapi)."
         else:
-            final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {round(conf_messy * 100, 2)}%. Clutter detected. Recommendation: De-clutter immediately."
+            final_message = f"Pemeriksaan Integritas Sistem: MERAH (HOT PINK). Kepercayaan berantakan {round(conf_messy * 100, 2)}%. Kekacauan terdeteksi. Rekomendasi: Segera Rapikan."
     
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
@@ -518,7 +481,8 @@ def run_ml_analysis():
     st.session_state.processed_image = processed_image_bytes
     st.session_state.analysis_results = results
     
-    st.session_state.execution_log_data = format_execution_log(results, st.session_state.uploaded_file.name)
+    # Log placeholder tetap di sini, tidak perlu diisi data log riil
+    st.session_state.execution_log_data = "Log display is disabled for Cute Vision AI theme."
     
     log_placeholder.empty()
     
@@ -534,9 +498,9 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         return {
             "title": "✅ STATUS OPTIMAL: APRESIASI KERAPIHAN",
             "icon": "✨",
-            "color": NEON_CYAN,
+            "color": ACCENT_PURPLE,
             "content": f"""
-                <p>Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada <b>UNOPTIMIZED ASSET</b> (jumlah: {messy_count}).</p>
+                <p>Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada <b>ASET TIDAK OPTIMAL</b> (jumlah: {messy_count}).</p>
                 <p><b>Tips Maintenance:</b></p>
                 <ul>
                     <li>Lanjutkan dengan prinsip 'Less is More': Pastikan setiap barang memiliki tempatnya yang spesifik.</li>
@@ -547,20 +511,20 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         }
     else: # Messy or Overridden
         if is_overridden:
-             override_note = f"<p style='color:{NEON_MAGENTA}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Clean', YOLOv8 mendeteksi {messy_count} item unoptimized yang signifikan, memicu Aturan Hibrida OVERRIDE ke status ALERT.</p>"
+             override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
         else:
              override_note = ""
 
         return {
-            "title": "🚨 STATUS ALERT: SARAN OPTIMASI RUANGAN",
+            "title": "🚨 STATUS PERINGATAN: SARAN OPTIMASI RUANGAN",
             "icon": "🧹",
-            "color": NEON_MAGENTA,
+            "color": ACCENT_PINK_MESSY,
             "content": f"""
                 {override_note}
-                <p>Ruangan Anda teridentifikasi sebagai <b>UNOPTIMIZED / MESSY</b>. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi <b>{messy_count} item UNOPTIMIZED</b>.</p>
+                <p>Ruangan Anda teridentifikasi sebagai <b>TIDAK OPTIMAL / BERANTAKAN</b>. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi <b>{messy_count} item TIDAK OPTIMAL</b>.</p>
                 <p><b>Rekomendasi Tindakan (De-Clutter Protocol):</b></p>
                 <ul>
-                    <li>Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (lihat tabel di bawah, seperti **Scattered Clothes** atau **Unsorted Papers**).</li>
+                    <li>Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti **Pakaian Berserakan** atau **Kertas Tidak Teratur**).</li>
                     <li>Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.</li>
                     <li>Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.</li>
                 </ul>
@@ -574,14 +538,14 @@ def render_upload_page():
     
     st.markdown(f"""
         <header>
-            <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">CLEAN OR MESSY?</span></h1>
-            <p style="color: {TEXT_LIGHT}; font-size: 16px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
+            <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">CUTE VISION AI</span></h1>
+            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
         </header>
         <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
     
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">1. Data Input Matrix (Upload Payload)</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Data Input Matrix (Upload Payload)</h2>', unsafe_allow_html=True)
 
     # Menampilkan pesan error jika ML tidak dimuat
     if not ML_LIBRARIES_LOADED:
@@ -603,7 +567,7 @@ def render_upload_page():
     # Tombol dinonaktifkan jika tidak ada file yang diunggah ATAU jika pustaka ML gagal dimuat
     button_disabled = st.session_state.uploaded_file is None or not ML_LIBRARIES_LOADED
     
-    if st.button("⚡ INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
+    if st.button("💖 INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
         # PANGGIL FUNGSI ML NYATA
         with st.spinner('Running Dual-Model Analysis...'):
              run_ml_analysis() 
@@ -627,19 +591,19 @@ def render_report_page():
 
     st.markdown(f"""
         <header>
-            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: {TEXT_LIGHT}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN).</p>
+            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
+            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN).</p>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
 
     # --- 1. GAMBAR YANG DIUNGGAH (ATAS) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">1. Visualisasi Deteksi Objek</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Visualisasi Deteksi Objek</h2>', unsafe_allow_html=True)
 
     border_class = 'clean-border' if results['is_clean'] else 'messy-border'
     
     st.markdown(f"""
-        <div style="border: 4px solid #34495E; border-radius: 10px; padding: 5px; background-color: {BG_DARK}; margin-bottom: 20px;" class="{border_class}">
+        <div style="border: 4px solid #34495E; border-radius: 15px; padding: 5px; background-color: {CARD_BG}; margin-bottom: 25px;" class="{border_class}">
         """, unsafe_allow_html=True)
 
     if st.session_state.processed_image:
@@ -650,10 +614,10 @@ def render_report_page():
         
     st.markdown('</div>', unsafe_allow_html=True)
     
-    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_NEON}; box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}; margin-top: 10px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
 
     # --- 2. KLASIFIKASI FINAL STATUS (UTAMA) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">2. Final Classification Status</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">2. Final Classification Status</h2>', unsafe_allow_html=True)
 
     col_report, col_clean_conf, col_messy_conf = st.columns([2, 1, 1])
 
@@ -662,37 +626,37 @@ def render_report_page():
     message = results['final_message']
     
     with col_report:
-        border_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
+        border_color = ACCENT_PURPLE if results['is_clean'] else ACCENT_PINK_MESSY
         st.markdown(f"""
             <div class="status-metric-card" style="height: 100%; border-color: {border_color}; box-shadow: 0 0 10px {border_color};">
-                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">CLASSIFICATION REPORT (Final Status)</p>
+                <p style="color: {TEXT_DARK}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">CLASSIFICATION REPORT (Final Status)</p>
                 <p class="{css_class_status}" style="font-size: 32px; margin-top: 5px;">{status_main_text}</p>
-                <p style="font-size: 12px; color: {TEXT_LIGHT}; opacity: 0.7;">{message}</p>
+                <p style="font-size: 12px; color: {TEXT_DARK}; opacity: 0.7;">{message}</p>
             </div>
             """, unsafe_allow_html=True)
             
     with col_clean_conf:
         st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_CYAN};">
-                <p style="color: {NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
+            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PURPLE}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PURPLE};">
+                <p style="color: {ACCENT_PURPLE}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: RAPI</p>
+                <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
+                <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
             """, unsafe_allow_html=True)
         
     with col_messy_conf:
         st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {NEON_MAGENTA}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_MAGENTA};">
-                <p style="color: {NEON_MAGENTA}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: MESSY</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
-                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
+            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PINK_MESSY}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PINK_MESSY};">
+                <p style="color: {ACCENT_PINK_MESSY}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: BERANTAKAN</p>
+                <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
+                <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
             """, unsafe_allow_html=True)
             
-    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_NEON}; box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}; margin-top: 10px; margin-bottom: 20px;'>", unsafe_allow_html=True)
+    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
     
     # --- 3. TIPS / APRESIASI ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">3. Tindakan Rekomendasi</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">3. Tindakan Rekomendasi</h2>', unsafe_allow_html=True)
     
     tips = get_tips_and_appreciation(results['is_clean'], results['messy_count'], results.get('is_overridden', False))
     
@@ -703,32 +667,8 @@ def render_report_page():
         </div>
         """, unsafe_allow_html=True)
 
-    # --- 4. LOG DAN DETAIL TABEL ---
-    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Log Eksekusi Model Ganda</h3>', unsafe_allow_html=True)
-
-    log_content = st.session_state.execution_log_data
-    st.markdown(f"""
-        <div class="log-container">
-            {log_content}
-        </div>
-        """, unsafe_allow_html=True)
-
-    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Tabel Detail Aset Terdeteksi ({results["detection_model"]})</h3>', unsafe_allow_html=True)
-
-    df = pd.DataFrame(results['detections'])
-    df = df.rename(columns={
-        'asset_id': 'Asset ID (Deteksi)', 
-        'confidence_score': 'Conf. Deteksi (%)', 
-        'classification_tag': 'Tag Kerapihan',
-        'normalized_coordinates': 'Koordinat Norm. (x, y, w, h)'
-    })
-    df['Conf. Deteksi (%)'] = (df['Conf. Deteksi (%)'] * 100).round(2).astype(str) + '%'
-    
-    st.dataframe(
-        df, 
-        use_container_width=True,
-        height=250 
-    )
+    # --- 4. LOG DAN DETAIL TABEL (DIHAPUS SESUAI PERMINTAAN) ---
+    # Bagian ini dikosongkan/dihapus
 
     # Tombol untuk kembali
     st.button("↩ KEMBALI KE HALAMAN UPLOAD", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
