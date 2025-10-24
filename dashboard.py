@@ -262,11 +262,7 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # PERBAIKAN KRITIS UNTUK SHAPE MISMATCH:
-    # Model Klasifikasi mengharapkan Flattened Vector (input ke Dense layer) berukuran 9216.
-    # Ukuran input sebelumnya (144x144) menghasilkan 12544 fitur.
-    # Kita mencoba ukuran input yang lebih umum (Power of 2) yang lebih kecil
-    # dan seharusnya mendekati 9216 fitur.
+    # Perbaikan ukuran gambar untuk menghindari shape mismatch pada model Keras/CNN
     target_size = (128, 128) 
     image_resized = image.resize(target_size)
     
@@ -278,7 +274,7 @@ def run_cnn_classification(cnn_model, image_bytes):
     # Prediksi
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
-    # Asumsikan output adalah (Conf_Clean, Conf_Messy)
+    # Asumsikan output adalah (Conf_Clean, Conf_Messy). Periksa indeks ini
     # Ganti urutan indeks ini (0 atau 1) sesuai dengan urutan kelas model CNN Anda
     conf_clean = predictions[0]  # Ganti indeks ini jika CLEAN bukan kelas 0
     conf_messy = predictions[1]  # Ganti indeks ini jika MESSY bukan kelas 1
@@ -361,12 +357,18 @@ def format_execution_log(results, uploaded_file_name):
     
     # Log Model 2: Klasifikasi
     log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Final Classification Complete. Input: Raw Image + Detection Context.")
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete.")
     
-    # Log Final
+    # Log Hybrid Rule
     tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
+    final_status_report = "REPORT"
+    
+    if results.get('is_overridden'):
+        log_lines.append(f"[{time.strftime('%H:%M:%S')}] <span style='color:{NEON_MAGENTA};'>WARNING: Hybrid Rule Triggered! Overriding CNN result due to high messy count ({results['messy_count']}).</span>")
+        final_status_report = "OVERRIDE-REPORT"
+    
     final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] REPORT: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span> (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%).")
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] {final_status_report}: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span> (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%).")
     
     return '<br>'.join(log_lines)
 
@@ -433,16 +435,37 @@ def run_ml_analysis():
     
     progress_bar.progress(90, text="[Step 2/2] Post-processing results...")
     
-    # --- PENENTUAN STATUS AKHIR (Berdasarkan CNN) ---
+    # --- PENENTUAN STATUS AKHIR (Berdasarkan CNN + Hybrid Rule) ---
+    
+    # Ambang batas Aturan Hibrida: Jika 3 atau lebih objek messy terdeteksi oleh YOLO,
+    # kita akan mengesampingkan hasil CNN jika ia mengklasifikasikannya sebagai Clean.
+    MESSY_DETECTION_THRESHOLD = 3 
+    
+    # 1. Penentuan Awal (Berdasarkan CNN)
     if conf_clean > conf_messy:
-        final_status = "STATUS: ROOM CLEAN - OPTIMAL"
         is_clean = True
-        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {round(conf_clean * 100, 2)}%. Excellent organization."
     else:
-        final_status = "STATUS: ROOM MESSY - ALERT"
         is_clean = False
-        final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {round(conf_messy * 100, 2)}%. Clutter detected. Recommendation: De-clutter immediately."
         
+    # 2. Implementasi Hybrid Rule: Override 'Clean' to 'Messy' jika hitungan YOLO tinggi
+    is_overridden = False
+    if is_clean and messy_count >= MESSY_DETECTION_THRESHOLD:
+        is_clean = False # Override status
+        is_overridden = True
+    
+    # 3. Final Status Assignment dan Pesan
+    if is_clean:
+        final_status = "STATUS: ROOM CLEAN - OPTIMAL"
+        final_message = f"System Integrity Check: GREEN (CYAN NEON). Cleanliness confidence {round(conf_clean * 100, 2)}%. Excellent organization. (YOLO Messy Count: {messy_count})."
+    else:
+        # Status MESSY
+        final_status = "STATUS: ROOM MESSY - ALERT"
+        
+        if is_overridden:
+            final_message = f"HYBRID OVERRIDE: YOLO detected {messy_count} UNOPTIMIZED assets (Threshold: {MESSY_DETECTION_THRESHOLD}). Final Status: ALERT. (CNN Conf: {round(conf_clean * 100, 2)}% Clean)."
+        else:
+            final_message = f"System Integrity Check: RED (MAGENTA NEON). Messy confidence {round(conf_messy * 100, 2)}%. Clutter detected. Recommendation: De-clutter immediately."
+    
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
     
@@ -455,7 +478,8 @@ def run_ml_analysis():
         "detection_model": "Siti Naura Khalisa_Laporan 4.pt",
         "classification_model": "SitiNauraKhalisa_Laporan2.h5",
         "detections": detections,
-        "final_message": final_message
+        "final_message": final_message,
+        "is_overridden": is_overridden # Tambahkan flag untuk logging
     }
     
     progress_bar.progress(100, text="Analysis Complete. Generating Report.")
