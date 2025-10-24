@@ -368,7 +368,7 @@ def run_ml_analysis():
         return
     
     # 1. Muat Model
-    yolo_model, cnn_model = load_ml_models()
+    yolo_model, cnn_model = load_ml_model()
     
     if yolo_model is None or cnn_model is None:
         # Jika model gagal dimuat, kembali ke simulasi jika perlu, atau hentikan.
@@ -458,7 +458,7 @@ st.markdown(f"""
     <header>
         <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">CLEAN OR MESSY?</span></h1>
         <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
-        <p style="color: {NEON_MAGENTA}; font-size: 12px; font-weight: bold;">CATATAN: Pastikan Anda telah menginstal 'ultralytics' dan 'tensorflow' dan menempatkan file model di folder 'models/'.</p>
+        <!-- PESAN PERINGATAN ASLI DIHAPUS DARI SINI -->
     </header>
     <div style="margin-bottom: 20px;"></div>
     """, unsafe_allow_html=True)
