@@ -15,8 +15,10 @@ try:
     from tensorflow.keras.models import load_model 
     
     ML_LIBRARIES_LOADED = True
+    # Menghapus st.warning di sini
 except ImportError:
-    st.warning("Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Aplikasi akan berjalan dalam mode SIMULASI yang ditingkatkan.")
+    # Mengubah ke st.error dan memastikan status False
+    st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
     ML_LIBRARIES_LOADED = False
 
 # --- 2. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
@@ -171,13 +173,17 @@ if 'processed_image' not in st.session_state:
     st.session_state.processed_image = None
 if 'execution_log_data' not in st.session_state:
     st.session_state.execution_log_data = []
+# Menambahkan state untuk menandai apakah analisis akan dijalankan
+if 'simulation_mode' not in st.session_state:
+    st.session_state.simulation_mode = not ML_LIBRARIES_LOADED
 
 # --- 3. Fungsi Pemuatan Model (Menggunakan Cache Resource Streamlit) ---
 @st.cache_resource
 def load_ml_model():
     """Memuat model YOLO dan CNN ke memori dengan caching."""
+    # Hanya mencoba memuat jika pustaka berhasil diimpor
     if not ML_LIBRARIES_LOADED:
-        return None, None # Kembali jika pustaka tidak dimuat
+        return None, None
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
@@ -194,7 +200,8 @@ def load_ml_model():
         
         return yolo_model, cnn_model
     except Exception as e:
-        st.error(f"Gagal memuat model. Pastikan file berada di folder 'model/' dan pustaka terinstal: {e}")
+        # Mengubah ini menjadi error eksplisit
+        st.error(f"FATAL ERROR: Gagal memuat file model dari path. Pastikan file berada di folder 'model/' dan namanya benar: {e}")
         return None, None
 
 # --- 4. Fungsi Real Inference dan Pemrosesan Data ---
@@ -363,6 +370,12 @@ def format_execution_log(results, uploaded_file_name):
 
 def run_ml_analysis():
     """Menggantikan simulate_yolo_analysis dengan alur kerja ML yang nyata."""
+    
+    # PERHATIAN: Periksa status pustaka sebelum melanjutkan
+    if not ML_LIBRARIES_LOADED:
+        st.error("Analisis dibatalkan: Pustaka Machine Learning gagal dimuat saat startup.")
+        return
+
     if st.session_state.uploaded_file is None:
         st.error("Sila muat naik imej ruangan dahulu.")
         return
@@ -370,9 +383,9 @@ def run_ml_analysis():
     # 1. Muat Model
     yolo_model, cnn_model = load_ml_model()
     
+    # PERHATIAN: Periksa status pemuatan model
     if yolo_model is None or cnn_model is None:
-        # Jika model gagal dimuat, kembali ke simulasi jika perlu, atau hentikan.
-        st.error("Gagal menjalankan analisis ML: Model tidak tersedia atau gagal dimuat.")
+        st.error("Analisis dibatalkan: File Model gagal dimuat dari direktori.")
         return
 
     st.session_state.analysis_results = None
@@ -494,7 +507,8 @@ with col_input:
     
     st.markdown('<div style="padding-top: 20px;">', unsafe_allow_html=True)
     
-    button_disabled = st.session_state.uploaded_file is None
+    # Tombol dinonaktifkan jika tidak ada file yang diunggah ATAU jika pustaka ML gagal dimuat
+    button_disabled = st.session_state.uploaded_file is None or not ML_LIBRARIES_LOADED
     
     if st.button("⚡ INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
         # PANGGIL FUNGSI ML NYATA
@@ -587,6 +601,7 @@ else:
         <div style="text-align: center; padding: 40px; border: 2px dashed {ACCENT_PRIMARY_NEON}; border-radius: 10px; background-color: {CARD_BG};">
             <h3 style="font-size: 24px; color:{ACCENT_PRIMARY_NEON};">METRICS AWAITING INFERENCE</h3>
             <p style="font-size: 16px; color: {TEXT_LIGHT};">Upload image and click 'INITIATE DUAL-MODEL ANALYSIS' to generate report.</p>
+            {f'<p style="color: {NEON_MAGENTA}; font-weight: bold;">(STATUS: Mode Inferensi Nyata dinonaktifkan karena kegagalan pemuatan ML Library)</p>' if not ML_LIBRARIES_LOADED else ''}
         </div>
     """, unsafe_allow_html=True)
 
@@ -600,6 +615,9 @@ else:
     log_content = f"""[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting Input Payload.<br>
 [{time.strftime('%H:%M:%S')}] DATA: No active payload detected. <br>
 [{time.strftime('%H:%M:%S')}] MODEL: Detection Model (<b>Siti Naura Khalisa_Laporan 4.pt</b>) and Classification Model (<b>SitiNauraKhalisa_Laporan2.h5</b>) are idle."""
+    if not ML_LIBRARIES_LOADED:
+        log_content += f"""<br>[{time.strftime('%H:%M:%S')}] <span style='color:{NEON_MAGENTA};'>FATAL: ML Libraries not loaded. All analysis requests will be denied.</span>"""
+
 
 st.markdown(f"""
     <div class="log-container">
