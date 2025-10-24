@@ -57,14 +57,17 @@ custom_css = f"""
         }}
     }}
 
-    /* --- KEYFRAME SOFT CORAL PINK & LIGHT BLUE GLOW (Untuk Judul Utama) --- */
+    /* --- KEYFRAME BARU: SOFT CORAL PINK & LIGHT BLUE GLOW --- */
+    /* Menggunakan ACCENT_LIGHT_BLUE sebagai glow sekunder */
     @keyframes soft-coral-glow {{
         0%, 100% {{
+            /* Soft Coral Pink shadow + Light Blue glow */
             text-shadow: 0 0 7px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_LIGHT_BLUE};
             color: {TEXT_DARK};
             opacity: 0.9;
         }}
         50% {{
+            /* Brighter glow at midpoint, color pulses to the pink accent */
             text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PRIMARY_PINK}, 0 0 40px {ACCENT_LIGHT_BLUE};
             color: {ACCENT_PRIMARY_PINK}; 
             opacity: 1;
@@ -81,22 +84,10 @@ custom_css = f"""
         100% {{ transform: translate(0); }}
     }}
 
-    /* --- GAYA HEADER CARD BARU (Membuat Judul Berada di Card Terpisah) --- */
-    .header-card-pastel {{
-        background-color: {CARD_BG}; /* White background */
-        border: 2px solid {ACCENT_LIGHT_BLUE}; /* Soft blue border */
-        box-shadow: 0 8px 30px rgba(170, 136, 255, 0.2); /* Lilac/Purple shadow for depth */
-        border-radius: 25px; /* Even more rounded */
-        padding: 30px 20px 25px 20px;
-        margin-bottom: 40px;
-        margin-top: -10px; /* Pull up slightly */
-        text-align: center;
-    }}
-    
     /* --- PERUBAHAN UTAMA DI SINI --- */
     .main-title {{
         color: {TEXT_DARK}; 
-        font-size: 5rem; 
+        font-size: 6rem; /* DIUBAH DARI 5rem MENJADI 6rem UNTUK UKURAN HEADER YANG LEBIH BESAR */
         font-weight: 900;
         letter-spacing: 5px;
         text-transform: uppercase;
@@ -115,12 +106,12 @@ custom_css = f"""
     
     .subtitle-center {{
         color: {ACCENT_PRIMARY_PINK};
-        font-size: 1.2rem; 
+        font-size: 1.2rem; /* UKURAN SUBTITLE TETAP KECIL */
         margin-top: 5px;
         text-align: center;
         font-weight: 600;
-        padding-bottom: 10px; /* Kurangi padding bottom karena border dipindah ke card */
-        border-bottom: none;
+        padding-bottom: 30px;
+        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }}
     
@@ -605,20 +596,18 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
 # --- 8. Fungsi Render Halaman (Pemisahan UI) ---
 
 def render_upload_page():
-    """Halaman 1: Upload Gambar Saja. Telah dioptimasi dengan header terbaik."""
+    """Halaman 1: Upload Gambar Saja."""
     
-    # --- JUDUL BARU TERPUSAT (IMPROVED) ---
-    # Membungkus judul dan subtitle dalam card bergaya pastel baru
-    st.markdown('<div class="header-card-pastel">', unsafe_allow_html=True)
+    # --- JUDUL BARU TERPUSAT ---
     st.markdown(f"""
         <header>
             <div style="text-align: center;">
-                <p class="main-title">🎀 ROOM INSIGHT 🎀</p> 
+                <p class="main-title">ROOM INSIGHT</p>
                 <p class="subtitle-center">CUTE VISION AI - Klasifikasikan Kerapihan Ruangan Anda</p>
             </div>
         </header>
+        <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
     # --- AKHIR JUDUL BARU ---
     
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
