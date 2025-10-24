@@ -4,21 +4,24 @@ import io
 import random
 import numpy as np
 
-# --- ML Imports (Memastikan pustaka tersedia) ---
-# Kami mengimpor pustaka yang diperlukan untuk model yang Anda sediakan:
-# YOLO (PyTorch/Ultralytics) dan CNN (Keras/TensorFlow)
+# --- 0. Penyiapan Pustaka dan Penanganan Kesalahan ---
+
+# Variabel global untuk model yang gagal dimuat
+yolo_imported = False
+cnn_imported = False
+
 try:
     # Import untuk YOLO
     import torch
     from ultralytics import YOLO
+    yolo_imported = True
     
     # Import untuk CNN Keras
     import tensorflow as tf
     from tensorflow.keras.models import load_model
-except ImportError:
-    st.error("⚠️ Pustaka machine learning yang diperlukan (torch, ultralytics, tensorflow) tidak ditemukan. Silakan instal.")
-    # st.stop() # Jangan stop jika hanya ingin melihat UI
-    pass
+    cnn_imported = True
+except ImportError as e:
+    st.error(f"⚠️ Pustaka Machine Learning yang diperlukan (torch/ultralytics/tensorflow) tidak ditemukan. Beberapa fungsi akan menggunakan simulasi. Error: {e}")
 
 # --- 1. Konfigurasi Halaman Streamlit (Aesthetic) ---
 
@@ -101,137 +104,135 @@ st.markdown("""
 """, unsafe_allow_html=True)
 
 
-# --- 2. Pemuatan Model (Mengganti Placeholder dengan Logika Nyata) ---
+# --- 2. Pemuatan Model (Menambahkan Fallback Aman) ---
 
 @st.cache_resource
 def load_yolo_model(model_path):
-    """
-    Memuat model Deteksi Objek YOLO (Siti Naura Khalisa_Laporan 4.pt).
-    Menggunakan pustaka Ultralytics YOLO.
-    """
+    """Memuat model Deteksi Objek YOLO (.pt)."""
+    if not yolo_imported:
+        st.warning("Model YOLO tidak dapat diimpor, menggunakan mode simulasi.")
+        return None
+        
     try:
-        # PENTING: Menggunakan Ultralytics YOLO untuk memuat model .pt
         model_yolo = YOLO(model_path)
         st.success("✅ Model YOLO (.pt) berhasil dimuat.")
         return model_yolo
-    except NameError:
-        st.error("Gagal memuat model YOLO: Pustaka Ultralytics atau torch belum terinstal/terimpor.")
-        return None
     except Exception as e:
-        st.error(f"Gagal memuat model YOLO: {e}")
+        # Menangkap error seperti 'Ran out of input'
+        st.error(f"❌ Gagal memuat model YOLO: {e}. Akan menggunakan mode simulasi.")
         return None
 
 @st.cache_resource
 def load_cnn_model(model_path):
-    """
-    Memuat model Klasifikasi Citra CNN (SitiNauraKhalisa_Laporan2.h5).
-    Menggunakan pustaka Keras/TensorFlow.
-    """
+    """Memuat model Klasifikasi Citra CNN (.h5)."""
+    if not cnn_imported:
+        st.warning("Model CNN tidak dapat diimpor, menggunakan mode simulasi.")
+        return None
+        
     try:
-        # PENTING: Menggunakan Keras untuk memuat model .h5
-        model_cnn = load_model(model_path, compile=False) # compile=False mempercepat pemuatan
+        model_cnn = load_model(model_path, compile=False) 
         st.success("✅ Model CNN (.h5) berhasil dimuat.")
         return model_cnn
-    except NameError:
-        st.error("Gagal memuat model CNN: Pustaka TensorFlow belum terinstal/terimpor.")
-        return None
     except Exception as e:
-        st.error(f"Gagal memuat model CNN: {e}")
+        st.error(f"❌ Gagal memuat model CNN: {e}. Akan menggunakan mode simulasi.")
         return None
 
 # Path file model yang telah diunggah
-# Catatan: Path 'model/' tidak diperlukan di lingkungan ini, langsung gunakan nama file
-yolo_model_path = "model/Siti Naura Khalisa_Laporan 4.pt" 
-cnn_model_path = "model/SitiNauraKhalisa_Laporan2.h5"
+yolo_model_path = "Siti Naura Khalisa_Laporan 4.pt" 
+cnn_model_path = "SitiNauraKhalisa_Laporan2.h5"
 
 # Memuat model saat aplikasi Streamlit dimulai
 yolo_model = load_yolo_model(yolo_model_path)
 cnn_model = load_cnn_model(cnn_model_path)
-
-# Jika salah satu model gagal dimuat, hentikan eksekusi
-if yolo_model is None or cnn_model is None:
-    # Streamlit akan menampilkan pesan error di fungsi load
-    st.stop()
     
 # --- 3. Data Konstan dan Logika Analisis ---
 
 # Data Simulasi (Gunakan nama kelas dari pelatihan model Anda)
-# Ini digunakan untuk mengkategorikan objek yang terdeteksi oleh YOLO
 MESSY_CLASSES = ["Baju Kotor", "Kabel Berantakan", "Piring Bekas", "Sampah Kertas", "Kaos Kaki Hilang", "Sprei Kusut", "Buku Tergeletak"]
 CLEAN_CLASSES = ["Karpet Rapi", "Meja Bersih", "Tanaman Hias", "Buku Tersusun", "Kaca Mengkilap", "Bantal Tersusun", "Lilin Aromaterapi"]
 
 def run_yolo_detection(image: Image.Image, model: YOLO):
-    """
-    Fungsi untuk menjalankan model YOLO (.pt) yang sesungguhnya.
-    Output adalah list of strings (nama objek yang terdeteksi).
-    """
+    """Fungsi untuk menjalankan model YOLO (.pt) atau mode simulasi."""
+    
+    # 1. Fallback / Mode Simulasi jika model gagal dimuat
+    if model is None:
+        st.warning("⚠️ MODE SIMULASI: YOLO Gagal Dimuat. Hasil deteksi disimulasikan.")
+        # Simulasikan deteksi dengan campuran objek
+        detected_objects = random.sample(MESSY_CLASSES + CLEAN_CLASSES, k=random.randint(3, 7))
+        return list(set(detected_objects))
+        
+    # 2. Inferensi Model Nyata
     st.info("YOLO: Sedang melakukan Deteksi Objek...")
-    
-    # Menjalankan inferensi YOLO
-    # Menggunakan conf default 0.4 dan iou 0.5 untuk deteksi (dapat disesuaikan)
-    results = model(image, conf=0.4, iou=0.5, verbose=False) 
-    
-    detected_objects = []
-    
-    # Memproses hasil dari objek yang terdeteksi
-    for result in results:
-        # result.names adalah dictionary yang memetakan index ke nama class
-        class_names = result.names
+    try:
+        results = model(image, conf=0.4, iou=0.5, verbose=False) 
         
-        # result.boxes.cls adalah tensor berisi index kelas yang terdeteksi
-        for cls_index in result.boxes.cls.tolist():
-            name = class_names.get(int(cls_index), f"Unknown Class {int(cls_index)}")
-            detected_objects.append(name)
+        detected_objects = []
+        for result in results:
+            class_names = result.names
+            for cls_index in result.boxes.cls.tolist():
+                name = class_names.get(int(cls_index), f"Unknown Class {int(cls_index)}")
+                detected_objects.append(name)
 
-    # Hanya ambil objek unik (dan batasi jumlahnya untuk tampilan)
-    detected_objects = list(set(detected_objects))
-    
-    # Jika tidak ada deteksi, beri hasil yang netral
-    if not detected_objects:
-        detected_objects = ["Tidak ada objek spesifik terdeteksi"]
+        detected_objects = list(set(detected_objects))
         
-    return detected_objects
+        if not detected_objects:
+            detected_objects = ["Tidak ada objek spesifik terdeteksi"]
+            
+        return detected_objects
+        
+    except Exception as e:
+        st.error(f"❌ Kesalahan saat inferensi YOLO: {e}. Menggunakan Simulasi.")
+        # Fallback ke mock logic jika inferensi gagal
+        detected_objects = random.sample(MESSY_CLASSES + CLEAN_CLASSES, k=random.randint(3, 7))
+        return list(set(detected_objects))
 
-def run_cnn_classification(image: Image.Image, model: keras.Model):
-    """
-    Fungsi untuk menjalankan model Klasifikasi Citra CNN (.h5) yang sesungguhnya.
-    Output adalah tuple (category_string, confidence_float).
-    """
+
+def run_cnn_classification(image: Image.Image, model: tf.keras.Model):
+    """Fungsi untuk menjalankan model Klasifikasi Citra CNN (.h5) atau mode simulasi."""
+    
+    # 1. Fallback / Mode Simulasi jika model gagal dimuat
+    if model is None:
+        st.warning("⚠️ MODE SIMULASI: CNN Gagal Dimuat. Hasil klasifikasi disimulasikan.")
+        final_category = random.choice(["Clean", "Messy"])
+        confidence_str = f"{random.uniform(70.0, 99.9):.1f}% Confidence (Simulated)"
+        return final_category, confidence_str
+        
+    # 2. Inferensi Model Nyata
     st.info("CNN: Sedang melakukan Klasifikasi Ruangan...")
-    
-    # Asumsi: Model Keras Anda dilatih dengan input 224x224, 3 channel (RGB)
-    target_size = (224, 224) 
-    
-    # 1. Preprocessing gambar
-    img = image.resize(target_size) 
-    img_array = np.array(img, dtype='float32') 
-    
-    # 2. Tambahkan dimensi batch (1, 224, 224, 3)
-    img_array = np.expand_dims(img_array, axis=0) 
-    
-    # 3. Normalisasi (Asumsi model dilatih dengan normalisasi 0-255 -> 0-1)
-    img_array = img_array / 255.0 
-    
-    # 4. Kelas output yang diasumsikan
-    # Ganti urutan kelas di sini jika urutan "Clean" dan "Messy" terbalik pada pelatihan Anda
-    class_labels = ["Clean", "Messy"] 
-    
-    # 5. Inferensi
-    prediction = model.predict(img_array, verbose=0)
-    
-    # 6. Ambil index kelas dengan probabilitas tertinggi
-    predicted_index = np.argmax(prediction[0])
-    confidence_value = prediction[0][predicted_index]
-    
-    final_category = class_labels[predicted_index]
-    confidence_str = f"{confidence_value * 100:.1f}% Confidence"
-    
-    return final_category, confidence_str
+    try:
+        # Asumsi: Model Keras Anda dilatih dengan input 224x224, 3 channel (RGB)
+        target_size = (224, 224) 
+        
+        # Preprocessing gambar
+        img = image.resize(target_size) 
+        img_array = np.array(img, dtype='float32') 
+        img_array = np.expand_dims(img_array, axis=0) 
+        img_array = img_array / 255.0 
+        
+        # Kelas output yang diasumsikan
+        class_labels = ["Clean", "Messy"] 
+        
+        # Inferensi
+        prediction = model.predict(img_array, verbose=0)
+        
+        # Ambil index kelas dengan probabilitas tertinggi
+        predicted_index = np.argmax(prediction[0])
+        confidence_value = prediction[0][predicted_index]
+        
+        final_category = class_labels[predicted_index]
+        confidence_str = f"{confidence_value * 100:.1f}% Confidence"
+        
+        return final_category, confidence_str
+
+    except Exception as e:
+        st.error(f"❌ Kesalahan saat inferensi CNN: {e}. Menggunakan Simulasi.")
+        # Fallback ke mock logic jika inferensi gagal
+        final_category = random.choice(["Clean", "Messy"])
+        confidence_str = f"{random.uniform(70.0, 99.9):.1f}% Confidence (Simulated Fallback)"
+        return final_category, confidence_str
 
 def combine_results(yolo_results, cnn_category):
-    """
-    Menggabungkan hasil YOLO dan CNN untuk rekomendasi akhir.
-    """
+    """Menggabungkan hasil YOLO dan CNN untuk rekomendasi akhir."""
     # Hitung berapa banyak objek berantakan yang ditemukan oleh YOLO
     messy_count = sum(1 for obj in yolo_results if obj in MESSY_CLASSES)
     
@@ -291,7 +292,6 @@ def main():
             with st.spinner("Memproses dengan Dual Model (YOLO dan CNN)..."):
                 
                 # 1. Deteksi Objek (YOLO)
-                # Model YOLO
                 yolo_results = run_yolo_detection(image, yolo_model)
                 
                 # 2. Klasifikasi Gambar (CNN)
@@ -323,7 +323,7 @@ def main():
         st.markdown('<div class="ciwii-box">', unsafe_allow_html=True)
 
         # --- Hasil Deteksi Objek (YOLO) ---
-        st.markdown("<h3>🔎 Deteksi Objek YOLO (dari .pt)</h3>", unsafe_allow_html=True)
+        st.markdown("<h3>🔎 Deteksi Objek YOLO</h3>", unsafe_allow_html=True)
         
         chips_html = ""
         for item in yolo_results:
@@ -378,6 +378,6 @@ if __name__ == '__main__':
 # Footer
 st.markdown("""
 <div style="text-align: center; margin-top: 50px; padding-top: 20px; color: #52436D80; font-size: 0.8em;">
-    <p>Dibangun menggunakan Streamlit. Memuat model `Siti Naura Khalisa_Laporan 4.pt` (YOLO) dan `SitiNauraKhalisa_Laporan2.h5` (CNN).</p>
+    <p>Dibangun menggunakan Streamlit. Memuat model <code>Siti Naura Khalisa_Laporan 4.pt</code> (YOLO) dan <code>SitiNauraKhalisa_Laporan2.h5</code> (CNN). Jika model gagal dimuat, aplikasi akan menggunakan Mode Simulasi.</p>
 </div>
 """, unsafe_allow_html=True)
