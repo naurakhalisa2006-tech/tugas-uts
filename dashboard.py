@@ -54,15 +54,13 @@ custom_css = f"""
         }}
     }}
 
-    /* Definisi Keyframe untuk Efek Dual Color Title Glow */
-    @keyframes dual-color-glow {{
+    /* Definisi Keyframe untuk Efek Blue Pulse Glow (Hanya Shadow Biru yang Berdenyut) */
+    @keyframes blue-pulse-glow {{
         0%, 100% {{
-            text-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK};
-            color: {ACCENT_PRIMARY_PINK};
+            text-shadow: 0 0 5px {ACCENT_BLUE}, 0 0 10px {ACCENT_BLUE}; /* Blue glow soft */
         }}
         50% {{
-            text-shadow: 0 0 10px {ACCENT_BLUE}, 0 0 20px {ACCENT_BLUE};
-            color: {ACCENT_BLUE};
+            text-shadow: 0 0 10px {ACCENT_BLUE}, 0 0 20px {ACCENT_BLUE}; /* Blue glow intense */
         }}
     }}
 
@@ -72,12 +70,13 @@ custom_css = f"""
         font-family: 'Inter', sans-serif;
     }}
     
-    /* GAYA H1 UTAMA DENGAN ANIMASI DUAL GLOW */
+    /* GAYA H1 UTAMA DENGAN ANIMASI BLUE PULSE GLOW */
     .main-title-glow {{
-        animation: dual-color-glow 3s infinite alternate; /* Menerapkan glow animasi */
-        display: inline-block; /* Penting untuk animasi text-shadow yang bersih */
+        animation: blue-pulse-glow 3s infinite alternate; /* Menerapkan glow animasi Biru */
+        display: inline-block;
         font-weight: 900;
         letter-spacing: 2px;
+        color: {ACCENT_PRIMARY_PINK}; /* Teks selalu Pink */
     }}
 
     /* GAYA UMUM H1 */
@@ -534,9 +533,9 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         }
     else: # Messy or Overridden
         if is_overridden:
-              override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
+            override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
         else:
-              override_note = ""
+            override_note = ""
 
         return {
             "title": "🚨 STATUS PERINGATAN: SARAN OPTIMASI RUANGAN",
