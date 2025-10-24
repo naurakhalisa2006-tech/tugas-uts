@@ -32,11 +32,11 @@ CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
 ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
-ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
+ACCENT_PRIMARY_NEON = "#4DFFFF"  # Neon Biru Muda (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
-TEXT_CLEAN_STATUS = ACCENT_BLUE
+TEXT_CLEAN_STATUS = ACCENT_PRIMARY_NEON
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
