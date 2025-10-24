@@ -36,7 +36,7 @@ ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
-TEXT_CLEAN_STATUS = ACCENT_PURPLE
+TEXT_CLEAN_STATUS = ACCENT_BLUE
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
@@ -692,12 +692,9 @@ def render_report_page():
             {tips['content']}
         </div>
         """, unsafe_allow_html=True)
-
-    # --- 4. LOG DAN DETAIL TABEL (DIHAPUS SESUAI PERMINTAAN) ---
-    # Bagian ini dikosongkan/dihapus
-
+        
     # Tombol untuk kembali
-    st.button("↩ KEMBALI KE HALAMAN UPLOAD", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
+    st.button("↩ BACK", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
 
 
 # --- 9. FUNGSI UTAMA APP CONTROLLER ---
