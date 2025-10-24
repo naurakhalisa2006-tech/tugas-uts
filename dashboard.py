@@ -19,6 +19,7 @@ except ImportError:
     ML_LIBRARIES_LOADED = False
 
 # --- 2. Konfigurasi dan Styling (Tema Cute Vision AI / Girly Pastel) ---
+# CATATAN: Semua kustomisasi HTML/CSS DIBUANG. Hanya menggunakan fitur Streamlit bawaan.
 
 st.set_page_config(
     page_title="ROOM INSIGHT",
@@ -26,182 +27,18 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# Palet Warna Cute Vision AI
+# Palet Warna Cute Vision AI (Digunakan untuk st.info/st.error/warna teks dinamis)
+# Warna ini sekarang hanya berfungsi sebagai referensi/nilai jika bisa diimplementasikan.
 BG_LIGHT = "#F0F0FF"            # Very Light Lavender/White
 CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
-ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
-ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
+ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent)
+ACCENT_BLUE = "#93CCFF"         # Light Blue (Secondary accent)
 ACCENT_NEON_CYAN = "#00FFFF"    # Neon Cyan (Clean Status)  
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
-BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
 TEXT_CLEAN_STATUS = ACCENT_NEON_CYAN
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
-
-custom_css = f"""
-<style>
-    /* Definisi Keyframe untuk Efek Soft Glow (Pink - untuk tombol) */
-    @keyframes soft-glow {{
-        0% {{
-            box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
-        }}
-        50% {{
-            box-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK};
-        }}
-        100% {{
-            box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
-        }}
-    }}
-
-    /* Definisi Keyframe untuk Efek Blue Pulse Glow (Hanya Shadow Biru yang Berdenyut) */
-    @keyframes blue-pulse-glow {{
-        0%, 100% {{
-            text-shadow: 0 0 5px {ACCENT_BLUE}, 0 0 10px {ACCENT_BLUE}; /* Blue glow soft */
-        }}
-        50% {{
-            text-shadow: 0 0 10px {ACCENT_BLUE}, 0 0 20px {ACCENT_BLUE}; /* Blue glow intense */
-        }}
-    }}
-
-    .stApp {{
-        background-color: {BG_LIGHT};
-        color: {TEXT_DARK};
-        font-family: 'Inter', sans-serif;
-    }}
-    
-    /* GAYA H1 UTAMA DENGAN ANIMASI BLUE PULSE GLOW */
-    .main-title-glow {{
-        animation: blue-pulse-glow 3s infinite alternate; /* Menerapkan glow animasi Biru */
-        display: inline-block;
-        font-weight: 900;
-        letter-spacing: 2px;
-        color: {ACCENT_PRIMARY_PINK}; /* Teks selalu Pink */
-    }}
-
-    /* GAYA UMUM H1 */
-    h1 {{
-        color: {ACCENT_PRIMARY_PINK}; /* Warna default H1, di-override oleh span.main-title-glow */
-        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
-        padding-bottom: 10px;
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-    }}
-    .modern-card {{
-        background-color: {CARD_BG};
-        border: 1px solid {ACCENT_PRIMARY_PINK};
-        box-shadow: 0 4px 15px rgba(255, 136, 170, 0.4);
-        border-radius: 18px; /* Lebih rounded */
-        padding: 25px;
-        margin-bottom: 25px;
-    }}
-    h2 {{
-        color: {ACCENT_PRIMARY_PINK};
-        border-bottom: 1px solid #DDDDDD;
-        padding-bottom: 5px;
-    }}
-    
-    /* GAYA UPLOADER CUTE */
-    [data-testid="stFileUploader"] {{
-        min-height: 200px; 
-        padding: 15px 25px 15px 25px !important;
-        margin-top: 15px;
-        border: 3px dashed {ACCENT_PRIMARY_PINK} !important; 
-        border-radius: 18px;
-        background-color: {CARD_BG} !important; 
-        pointer-events: auto !important;
-        box-shadow: 0 2px 10px rgba(255, 136, 170, 0.3);
-    }}
-    [data-testid="stFileUploaderDropzoneInstructions"] p, [data-testid="stFileUploader"] label {{
-        color: {TEXT_DARK} !important;
-        font-weight: 500;
-    }}
-    
-    /* GAYA TOMBOL 'BROWSE FILES' DI DALAM UPLOADER */
-    [data-testid="stFileUploaderDropzone"] button {{
-        background-color: {ACCENT_PRIMARY_PINK} !important;
-        color: {CARD_BG} !important;
-        font-weight: bold !important;
-        border: none !important;
-        border-radius: 10px !important;
-        transition: all 0.3s !important;
-        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2) !important;
-    }}
-    [data-testid="stFileUploaderDropzone"] button:hover {{
-        background-color: {ACCENT_PINK_MESSY} !important;
-        box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2) !important;
-    }}
-    
-    /* Tombol Initiate Dual-Model Analysis (Tombol utama non-uploader) */
-    .stButton > button:nth-child(1) {{
-        background-color: {BUTTON_COLOR_SOFT}; 
-        color: {TEXT_DARK} !important;
-        font-weight: bold;
-        border-radius: 15px;
-        border: none;
-        transition: all 0.3s;
-        box-shadow: 0 4px 10px rgba(255, 179, 217, 0.6);
-        height: 55px;
-        font-size: 18px;
-        animation: soft-glow 3s infinite alternate;
-    }}
-    .stButton > button:nth-child(1):hover {{
-        background-color: {ACCENT_PRIMARY_PINK};
-        color: {CARD_BG} !important;
-        box-shadow: 0 6px 15px rgba(255, 179, 217, 0.8);
-    }}
-
-    /* Tombol Kembali (Return Button) */
-    .stButton > button[data-testid="stElement" i]:not(:nth-child(1)) {{
-        background-color: {CARD_BG}; 
-        color: {ACCENT_PRIMARY_PINK} !important;
-        border: 2px solid {ACCENT_PRIMARY_PINK} !important;
-        box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK};
-        border-radius: 10px;
-        margin-top: 20px;
-    }}
-
-    .status-metric-card {{
-        background-color: {CARD_BG};
-        border: 2px solid #EEEEEE;
-        border-radius: 15px;
-        padding: 20px;
-        text-align: center;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 10px rgba(0,0,0,0.1);
-    }}
-    
-    .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
-    .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
-    
-    .clean-border {{ border-color: {ACCENT_NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important; }}
-    .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
-    
-    .tips-box {{
-        padding: 25px;
-        border-radius: 18px;
-        margin-top: 30px;
-        margin-bottom: 30px;
-        border-left: 5px solid;
-    }}
-
-    .tips-box h3 {{
-        color: inherit !important;
-        font-weight: bold;
-        padding-bottom: 5px;
-        border-bottom: none;
-    }}
-    .tips-box ul {{
-        list-style-type: '💖 '; /* Cute List Style */
-        padding-left: 20px;
-        color: {TEXT_DARK};
-    }}
-    p {{ color: {TEXT_DARK}; }}
-
-    /* Menyembunyikan log container karena tidak digunakan lagi */
-    .log-container {{ display: none; }}
-</style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
 
 # Inisialisasi State Session
 if 'uploaded_file' not in st.session_state:
@@ -211,7 +48,6 @@ if 'analysis_results' not in st.session_state:
 if 'processed_image' not in st.session_state:
     st.session_state.processed_image = None
 if 'execution_log_data' not in st.session_state:
-    # Cukup set string placeholder karena log tidak ditampilkan
     st.session_state.execution_log_data = "Log display is disabled."
 if 'app_state' not in st.session_state:
     st.session_state.app_state = 'UPLOAD' # Mengelola navigasi
@@ -220,7 +56,6 @@ if 'app_state' not in st.session_state:
 @st.cache_resource
 def load_ml_model():
     """Memuat model YOLO dan CNN ke memori dengan caching."""
-    # Hanya mencoba memuat jika pustaka berhasil diimpor
     if not ML_LIBRARIES_LOADED:
         return None, None
     
@@ -233,13 +68,11 @@ def load_ml_model():
         yolo_model = YOLO(YOLO_MODEL_PATH)
         
         # Model 2: Klasifikasi Ruangan (Keras/CNN)
-        # Suppress TensorFlow warnings/messages
         tf.get_logger().setLevel('ERROR')
         cnn_model = load_model(CNN_MODEL_PATH)
         
         return yolo_model, cnn_model
     except Exception as e:
-        # Mengubah ini menjadi error eksplisit
         st.error(f"FATAL ERROR: Gagal memuat file model dari path. Pastikan file berada di folder 'model/' dan namanya benar: {e}")
         return None, None
 
@@ -248,7 +81,6 @@ def load_ml_model():
 def run_yolo_detection(yolo_model, image_path):
     """Menjalankan inferensi YOLOv8 dan memproses hasilnya."""
     
-    # Menjalankan prediksi (Mode 'save=False' dan 'conf' dapat disesuaikan)
     results = yolo_model.predict(
         source=image_path, 
         conf=0.25, # Ambang batas kepercayaan minimum
@@ -257,19 +89,16 @@ def run_yolo_detection(yolo_model, image_path):
         save=False
     )
     
-    # Ambil hasil dari batch pertama (image_path tunggal)
     result = results[0] 
     
     detections = []
     messy_count = 0
     
-    # Mendefinisikan ID Kelas yang dianggap "Messy" (Ganti sesuai nama kelas model Anda)
     MESSY_CLASS_NAMES = ["Scattered_Clothes", "Loose_Cables", "Unsorted_Papers", "Trash_Object", "Empty_Bottles", "Food_Wrapper"]
     class_names = result.names # Peta ID ke nama kelas
     
     
     for box in result.boxes:
-        # Koordinat bounding box (normalized, xywh format)
         x_norm, y_norm, w_norm, h_norm = box.xywhn[0].tolist() 
         conf = box.conf.item() 
         class_id = box.cls.item()
@@ -300,26 +129,21 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # Perbaikan ukuran gambar untuk menghindari shape mismatch pada model Keras/CNN
     target_size = (128, 128) 
     image_resized = image.resize(target_size)
     
-    # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
     img_array = np.array(image_resized)
-    img_array = np.expand_dims(img_array, axis=0)  # Tambahkan dimensi batch
-    img_array = img_array / 255.0 # Normalisasi
+    img_array = np.expand_dims(img_array, axis=0)  
+    img_array = img_array / 255.0 
     
-    # Prediksi
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
-    # Asumsikan output adalah (Conf_Clean, Conf_Messy). Periksa indeks ini
-    # Ganti urutan indeks ini (0 atau 1) sesuai dengan urutan kelas model CNN Anda
-    conf_clean = predictions[0]  # Ganti indeks ini jika CLEAN bukan kelas 0
-    conf_messy = predictions[1]  # Ganti indeks ini jika MESSY bukan kelas 1
+    conf_clean = predictions[0]  
+    conf_messy = predictions[1]  
     
     return conf_clean, conf_messy
 
-# --- 5. Fungsi Utilitas Visualisasi (format_execution_log dihapus) ---
+# --- 5. Fungsi Utilitas Visualisasi (TETAP SAMA) ---
 
 def draw_boxes_on_image(image_bytes, detections):
     """Menggambar Bounding Box Neon pada Gambar dari hasil deteksi."""
@@ -327,11 +151,9 @@ def draw_boxes_on_image(image_bytes, detections):
     draw = ImageDraw.Draw(image)
     image_width, image_height = image.size
     
-    # Menggunakan warna tema baru
-    # FIX: Mengganti ACCENT_PURPLE yang tidak terdefinisi dengan ACCENT_NEON_CYAN
     CLEAN_RGB = ImageColor.getrgb(ACCENT_NEON_CYAN) 
     MESSY_RGB = ImageColor.getrgb(ACCENT_PINK_MESSY)
-    TEXT_BG_RGB = ImageColor.getrgb(CARD_BG) # Teks hitam di atas kotak putih/terang
+    TEXT_BG_RGB = ImageColor.getrgb(CARD_BG)
     
     try:
         font_size = max(15, min(image_width // 40, 30))
@@ -340,16 +162,13 @@ def draw_boxes_on_image(image_bytes, detections):
         font = ImageFont.load_default()
         
     for det in detections:
-        # Koordinat Normalized (x_center, y_center, w, h) dari YOLO
         x_norm, y_norm, w_norm, h_norm = det['normalized_coordinates']
         
-        # Konversi YOLO xywhn ke PIXEL xyxy
         x_min = int((x_norm - w_norm/2) * image_width)
         y_min = int((y_norm - h_norm/2) * image_height)
         x_max = int((x_norm + w_norm/2) * image_width)
         y_max = int((y_norm + h_norm/2) * image_height)
         
-        # Clamp koordinat
         x_max = min(x_max, image_width - 1)
         y_max = min(y_max, image_height - 1)
         x_min = max(0, x_min)
@@ -384,14 +203,11 @@ def draw_boxes_on_image(image_bytes, detections):
     image.save(buf, format='JPEG')
     return buf.getvalue()
 
-# Fungsi format_execution_log dihapus
-
 # --- 6. Fungsi Utama Alur Kerja ML (Disesuaikan untuk navigasi) ---
 
 def run_ml_analysis():
     """Menjalankan analisis ML nyata dan beralih ke halaman report."""
     
-    # PERHATIAN: Periksa status pustaka sebelum melanjutkan
     if not ML_LIBRARIES_LOADED:
         st.error("Analisis dibatalkan: Pustaka Machine Learning gagal dimuat saat startup.")
         return
@@ -400,30 +216,24 @@ def run_ml_analysis():
         st.error("Sila muat naik imej ruangan dahulu.")
         return
     
-    # 1. Muat Model
     yolo_model, cnn_model = load_ml_model()
     
-    # PERHATIAN: Periksa status pemuatan model
     if yolo_model is None or cnn_model is None:
         st.error("Analisis dibatalkan: File Model gagal dimuat dari direktori.")
         return
 
-    # Reset hasil
     st.session_state.analysis_results = None
     st.session_state.processed_image = None
-    st.session_state.execution_log_data = "Log display is disabled." # Tetap set string placeholder
+    st.session_state.execution_log_data = "Log display is disabled."
     
     
-    # Placeholder log dan progress bar
     log_placeholder = st.empty()
-    log_placeholder.markdown(f'<p style="color: {TEXT_DARK};">SYSTEM> Initiating inference. Loading models...</p>', unsafe_allow_html=True)
+    log_placeholder.info("SYSTEM> Initiating inference. Loading models...")
     
     progress_bar = st.progress(0, text="Loading Tensor Core & Running Inference...")
     
-    # 2. Persiapan Data
     image_bytes = st.session_state.uploaded_file.getvalue()
     
-    # Simpan file secara sementara untuk dibaca oleh YOLO (YOLOv8 sering membaca dari path)
     temp_path = "temp_upload.jpg"
     with open(temp_path, "wb") as f:
         f.write(image_bytes)
@@ -444,7 +254,6 @@ def run_ml_analysis():
     try:
         conf_clean, conf_messy = run_cnn_classification(cnn_model, image_bytes)
     except Exception as e:
-        # Menangkap error CNN/Dense layer di sini
         st.error(f"Error saat menjalankan Klasifikasi CNN: {e}")
         progress_bar.empty()
         return
@@ -455,10 +264,7 @@ def run_ml_analysis():
     
     MESSY_DETECTION_THRESHOLD = 3 
     
-    if conf_clean > conf_messy:
-        is_clean = True
-    else:
-        is_clean = False
+    is_clean = conf_clean > conf_messy
         
     is_overridden = False
     if is_clean and messy_count >= MESSY_DETECTION_THRESHOLD:
@@ -466,15 +272,15 @@ def run_ml_analysis():
         is_overridden = True
     
     if is_clean:
-        final_status = "STATUS: CLEAN ROOM - OPTIMAL" # Diterjemahkan
+        final_status = "STATUS: CLEAN ROOM - OPTIMAL" 
         final_message = f"WAH KEREN KAMU MENJAGA KEBERSIHAN KAMAR"
     else:
-        final_status = "STATUS: RUANGAN BERANTAKAN - PERINGATAN" # Diterjemahkan
+        final_status = "STATUS: RUANGAN BERANTAKAN - PERINGATAN"
         
         if is_overridden:
-            final_message = f"HYBRID OVERRIDE: YOLO mendeteksi {messy_count} aset TIDAK OPTIMAL (Ambang batas: {MESSY_DETECTION_THRESHOLD}). Status Akhir: PERINGATAN. (CNN Conf: {round(conf_clean * 100, 2)}% Rapi)."
+            final_message = f"HYBRID OVERRIDE: YOLO mendeteksi {messy_count} aset TIDAK OPTIMAL. Status Akhir: PERINGATAN."
         else:
-            final_message = f"Pemeriksaan Integritas Sistem: MERAH (HOT PINK). Kepercayaan berantakan {round(conf_messy * 100, 2)}%. Kekacauan terdeteksi. Rekomendasi: Segera Rapikan."
+            final_message = f"Pemeriksaan Integritas Sistem: MERAH. Kepercayaan berantakan {round(conf_messy * 100, 2)}%. Kekacauan terdeteksi. Rekomendasi: Segera Rapikan."
     
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
@@ -489,13 +295,12 @@ def run_ml_analysis():
         "classification_model": "SitiNauraKhalisa_Laporan2.h5",
         "detections": detections,
         "final_message": final_message,
-        "is_overridden": is_overridden # Tambahkan flag untuk logging
+        "is_overridden": is_overridden 
     }
     
     progress_bar.progress(100, text="Analysis Complete. Generating Report.")
     progress_bar.empty()
 
-    # Hapus file sementara
     try:
         os.remove(temp_path)
     except OSError:
@@ -504,194 +309,165 @@ def run_ml_analysis():
     st.session_state.processed_image = processed_image_bytes
     st.session_state.analysis_results = results
     
-    # Log placeholder tetap di sini, tidak perlu diisi data log riil
-    st.session_state.execution_log_data = "Log display is disabled for Cute Vision AI theme."
-    
     log_placeholder.empty()
     
     # --- BERALIH KE HALAMAN REPORT ---
     st.session_state.app_state = 'REPORT'
-    st.rerun() # Memaksa Streamlit untuk me-render ulang
+    st.rerun() 
 
 # --- 7. Fungsi Utility Tips/Apresiasi ---
 
 def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
-    """Menghasilkan konten HTML untuk tips atau apresiasi."""
+    """Menghasilkan konten untuk tips atau apresiasi (Pure Streamlit markdown)."""
     if is_clean:
         return {
             "title": "✅ STATUS OPTIMAL: APRESIASI",
-            "icon": "✨",
-            "color": ACCENT_NEON_CYAN,
+            "emoji": "✨",
+            "type": "success",
             "content": f"""
-                Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. 
-                Sistem kami mendeteksi sedikit atau tidak ada ASET TIDAK OPTIMAL
-                Tips Maintenance:
-                Pastikan setiap barang memiliki tempatnya yang spesifik. Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.
-                Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.
+Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada **ASET TIDAK OPTIMAL** (jumlah: {messy_count}).
+
+**Tips Maintenance:**
+* Lanjutkan dengan prinsip 'Less is More': Pastikan setiap barang memiliki tempatnya yang spesifik.
+* Audit Digital: Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.
+* Sistem 5 Menit: Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.
             """
         }
-    else: # Messy or Overridden
+    else: 
+        override_note = ""
         if is_overridden:
-            override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
-        else:
-            override_note = ""
+            override_note = f"\n\n**CATATAN SISTEM:** Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.\n"
 
         return {
             "title": "🚨 STATUS PERINGATAN: SARAN OPTIMASI RUANGAN",
-            "icon": "🧹",
-            "color": ACCENT_PINK_MESSY,
+            "emoji": "🧹",
+            "type": "warning",
             "content": f"""
-             Ruangan Anda teridentifikasi sebagai TIDAK OPTIMAL. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi item TIDAK OPTIMAL.
-             Rekomendasi Tindakan :
-             Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti Pakaian Berserakan atau Kertas Tidak Teratur).
-             Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.
-             Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.
+{override_note}
+Ruangan Anda teridentifikasi sebagai **TIDAK OPTIMAL / BERANTAKAN**. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi **{messy_count} item TIDAK OPTIMAL**.
+
+**Rekomendasi Tindakan (De-Clutter Protocol):**
+* Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti **Pakaian Berserakan** atau **Kertas Tidak Teratur**).
+* Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.
+* Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.
             """
         }
 
-# --- 8. Fungsi Render Halaman (Pemisahan UI) ---
+# --- 8. Fungsi Render Halaman (Pemisahan UI - PURE STREAMLIT) ---
 
 def render_upload_page():
-    """Halaman 1: Upload Gambar Saja."""
+    """Halaman 1: Upload Gambar Saja (Pure Streamlit)."""
     
-    # Penambahan class 'main-title-glow' pada span "ROOM INSIGHT"
-    st.markdown(f"""
-        <header>
-            <h1>
-                <span class="main-title-glow">ROOM INSIGHT</span>
-                <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">Clean or Messy?</span>
-            </h1>
-            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Keadaan Ruangan Anda!</p>
-        </header>
-        <div style="margin-bottom: 40px;"></div>
-        """, unsafe_allow_html=True)
-    
-    st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Upload Foto</h2>', unsafe_allow_html=True)
+    st.title("ROOM INSIGHT")
+    st.header("Clean or Messy?")
+    st.write("Klasifikasikan Keadaan Ruangan Anda!")
 
-    # Menampilkan pesan error jika ML tidak dimuat
-    if not ML_LIBRARIES_LOADED:
-        st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
-        
-    uploaded_file = st.file_uploader(
-        "Upload Image File (JPG/PNG)", 
-        type=["jpg", "jpeg", "png"],
-        key="uploader_main",
-        help="Unggah file gambar ruangan untuk dianalisis."
-    )
+    # Menggantikan modern-card dengan st.container
+    with st.container(border=True): 
+        st.subheader("Upload Foto")
 
-    st.session_state.uploaded_file = uploaded_file
+        if not ML_LIBRARIES_LOADED:
+            st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
+            
+        uploaded_file = st.file_uploader(
+            "Upload Image File (JPG/PNG)", 
+            type=["jpg", "jpeg", "png"],
+            key="uploader_main",
+            help="Unggah file gambar ruangan untuk dianalisis."
+        )
 
-    st.markdown('</div>', unsafe_allow_html=True) 
+        st.session_state.uploaded_file = uploaded_file
 
-    st.markdown('<div style="padding-top: 20px;">', unsafe_allow_html=True)
-    
+        if uploaded_file is not None:
+            st.image(uploaded_file, caption='Image Preview', use_column_width=True)
+
     # Tombol dinonaktifkan jika tidak ada file yang diunggah ATAU jika pustaka ML gagal dimuat
     button_disabled = st.session_state.uploaded_file is None or not ML_LIBRARIES_LOADED
     
-    if st.button("💖 INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
-        # PANGGIL FUNGSI ML NYATA
+    # Menggunakan st.button biasa
+    if st.button("💖 INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True, type="primary"):
         with st.spinner('Running Dual-Model Analysis...'):
             run_ml_analysis() 
         
     if st.session_state.uploaded_file and not ML_LIBRARIES_LOADED:
         st.warning("Analisis dinonaktifkan karena pustaka Machine Learning tidak tersedia. Harap instal 'ultralytics' dan 'tensorflow' untuk fungsi penuh.")
 
-    st.markdown('</div>', unsafe_allow_html=True)
-
 def render_report_page():
-    """Halaman 2: Tampilan Laporan Analisis."""
+    """Halaman 2: Tampilan Laporan Analisis (Pure Streamlit)."""
 
     results = st.session_state.analysis_results
     
-    # Cek apakah ada hasil
     if not results or not st.session_state.uploaded_file:
         st.error("Sesi analisis tidak valid. Kembali ke halaman utama.")
         st.session_state.app_state = 'UPLOAD'
         st.rerun()
         return
 
-    st.markdown(f"""
-        <header>
-            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {TEXT_DARK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
-        </header>
-        <div style="margin-bottom: 20px;"></div>
-        """, unsafe_allow_html=True)
+    st.title(f"ANALYSIS REPORT: {st.session_state.uploaded_file.name.upper()}")
+    st.caption("Laporan lengkap hasil deteksi objek dan klasifikasi objek.")
 
-    # --- 1. GAMBAR YANG DIUNGGAH (ATAS) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Deteksi Objek</h2>', unsafe_allow_html=True)
+    st.header("Deteksi Objek")
 
-    border_class = 'clean-border' if results['is_clean'] else 'messy-border'
-    
-    st.markdown(f"""
-        <div style="border: 4px solid #34495E; border-radius: 15px; padding: 5px; background-color: {CARD_BG}; margin-bottom: 25px;" class="{border_class}">
-        """, unsafe_allow_html=True)
-
-    if st.session_state.processed_image:
-        st.image(st.session_state.processed_image, caption='VISUALIZATION: Live Detection Grid (YOLO v8 Output)', use_container_width=True)
-    else:
-        image_data = st.session_state.uploaded_file.getvalue()
-        st.image(image_data, caption='Image Data Stream (Original)', use_container_width=True)
+    # Menggunakan st.image dengan container untuk border
+    with st.container(border=True):
+        st.subheader('VISUALIZATION: Live Detection Grid (YOLO v8 Output)')
+        if st.session_state.processed_image:
+            st.image(st.session_state.processed_image, caption='Processed Image', use_container_width=True)
+        else:
+            image_data = st.session_state.uploaded_file.getvalue()
+            st.image(image_data, caption='Original Image', use_container_width=True)
         
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
+    st.divider()
 
     # --- 2. KLASIFIKASI FINAL STATUS (UTAMA) ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Classification Status</h2>', unsafe_allow_html=True)
+    st.header("Classification Status")
 
     col_report, col_clean_conf, col_messy_conf = st.columns([2, 1, 1])
 
     status_main_text = results['final_status'].split(': ')[1]
-    css_class_status = 'clean-status-text' if results['is_clean'] else 'messy-status-text'
     message = results['final_message']
     
     with col_report:
-        border_color = ACCENT_NEON_CYAN if results['is_clean'] else ACCENT_PINK_MESSY
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {border_color}; box-shadow: 0 0 10px {border_color};">
-                <p style="color: {TEXT_DARK}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">CLASSIFICATION REPORT (Final Status)</p>
-                <p class="{css_class_status}" style="font-size: 32px; margin-top: 5px;">{status_main_text}</p>
-                <p style="font-size: 12px; color: {TEXT_DARK}; opacity: 0.7;">{message}</p>
-            </div>
-            """, unsafe_allow_html=True)
+        # Menggunakan st.info/st.success/st.error sebagai pengganti card kustom
+        if results['is_clean']:
+            st.success(f"**FINAL STATUS: {status_main_text}**\n\n{message}")
+        else:
+            st.error(f"**FINAL STATUS: {status_main_text}**\n\n{message}")
             
     with col_clean_conf:
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_NEON_CYAN};">
-                <p style="color: {ACCENT_NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
-                <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
-                <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
-            </div>
-            """, unsafe_allow_html=True)
+        # Menggunakan st.metric
+        st.metric(label=f"CONFIDENCE: CLEAN (Model: {results['classification_model']})", 
+                  value=f"{results['conf_clean']}%", 
+                  delta=None)
             
     with col_messy_conf:
-        st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PINK_MESSY}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PINK_MESSY};">
-                <p style="color: {ACCENT_PINK_MESSY}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: MESSY</p>
-                <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
-                <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
-            </div>
-            """, unsafe_allow_html=True)
-            
-    st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_PINK}; box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}; margin-top: 10px; margin-bottom: 25px;'>", unsafe_allow_html=True)
+        # Menggunakan st.metric
+        st.metric(label=f"CONFIDENCE: MESSY (Model: {results['classification_model']})", 
+                  value=f"{results['conf_messy']}%", 
+                  delta=None)
+
+    st.divider()
     
     # --- 3. TIPS / APRESIASI ---
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">Rekomendasi</h2>', unsafe_allow_html=True)
+    st.header("Rekomendasi")
     
     tips = get_tips_and_appreciation(results['is_clean'], results['messy_count'], results.get('is_overridden', False))
     
-    st.markdown(f"""
-        <div class="tips-box" style="background-color: {CARD_BG}; border-color: {tips['color']}; box-shadow: 0 0 10px rgba({tips['color'][1:]}, 0.5);">
-            <h3 style="color: {tips['color']};">{tips['icon']} {tips['title']}</h3>
-            {tips['content']}
-        </div>
-        """, unsafe_allow_html=True)
+    # Mengganti tips-box dengan container dan notifikasi Streamlit
+    with st.container(border=True):
+        st.subheader(f"{tips['emoji']} {tips['title']}")
+        if tips['type'] == 'success':
+             st.success(tips['content'])
+        elif tips['type'] == 'warning':
+             st.warning(tips['content'])
+        else:
+             st.info(tips['content'])
+
 
     # Tombol untuk kembali
-    st.button("↩ BACK", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
-
+    st.button("↩ BACK", 
+              on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), 
+              use_container_width=False)
 
 # --- 9. FUNGSI UTAMA APP CONTROLLER ---
 if st.session_state.app_state == 'UPLOAD':
@@ -699,6 +475,5 @@ if st.session_state.app_state == 'UPLOAD':
 elif st.session_state.app_state == 'REPORT':
     render_report_page()
 else:
-    # Fallback, seharusnya tidak terjadi
     st.session_state.app_state = 'UPLOAD'
     st.rerun()
