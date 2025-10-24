@@ -83,7 +83,7 @@ custom_css = f"""
 
     .main-title {{
         color: {TEXT_DARK}; /* Warna dasar gelap */
-        font-size: 20rem; /* UKURAN LEBIH BESAR SESUAI PERMINTAAN */
+        font-size: 50rem; /* UKURAN LEBIH BESAR SESUAI PERMINTAAN */
         font-weight: 900;
         letter-spacing: 5px;
         text-transform: uppercase;
