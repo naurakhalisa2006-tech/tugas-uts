@@ -139,8 +139,8 @@ if 'execution_log_data' not in st.session_state:
 [{time.strftime('%H:%M:%S')}] MODEL: Detection Model (<b>Siti Naura Khalisa_Laporan 4.pt</b>) and Classification Model (<b>SitiNauraKhalisa_Laporan2.h5</b>) are idle."""
 
 # Penamaan Model
-YOLO_MODEL_NAME = "Siti Naura Khalisa_Laporan 4.pt"
-CLASSIFICATION_MODEL_NAME = "SitiNauraKhalisa_Laporan2.h5"
+YOLO_MODEL_NAME = "model/Siti Naura Khalisa_Laporan 4.pt"
+CLASSIFICATION_MODEL_NAME = "model/SitiNauraKhalisa_Laporan2.h5"
 
 # Placeholder untuk model yang dimuat
 if ML_LIBRARIES_LOADED and 'yolo_model' not in st.session_state:
