@@ -1,11 +1,9 @@
 import streamlit as st
-from PIL import Image
+from PIL import Image, ImageDraw # Tambahkan ImageDraw
 import numpy as np
 import os
-import cv2 # Untuk manipulasi gambar (Deteksi Objek)
 
 # --- Pustaka Model (Diperlukan untuk memuat model nyata) ---
-# Import ini diperlukan agar fungsi load_model dapat berjalan
 try:
     import tensorflow as tf
     from tensorflow import keras
@@ -17,6 +15,17 @@ try:
     import torch
 except ImportError:
     st.warning("Pustaka Ultralytics/PyTorch tidak ditemukan. Fungsi deteksi objek akan disimulasikan.")
+
+# --- Ketergantungan CV2 (Diisolasi dari Error libGL) ---
+cv2_loaded = False
+try:
+    import cv2 # Untuk manipulasi gambar (Deteksi Objek)
+    cv2_loaded = True
+except ImportError as e:
+    if "libGL.so.1" in str(e):
+        st.warning("⚠️ Peringatan: cv2 gagal dimuat (libGL.so.1 hilang). Fungsi deteksi visual akan menggunakan fallback (Pillow).")
+    else:
+        st.warning(f"⚠️ Peringatan: cv2 gagal dimuat: {e}. Fungsi deteksi visual akan menggunakan fallback (Pillow).")
 # -------------------------------------------------------------
 
 # --- Konfigurasi File Model ---
@@ -118,9 +127,36 @@ yolo_model = load_yolo_model(YOLO_MODEL_PATH)
 classification_model = load_classification_model(CLASSIFICATION_MODEL_PATH)
 
 
-# --- Fungsi Prediksi Simulasi (Jika model gagal dimuat) ---
-def simulate_detection(image):
-    """Simulasi deteksi objek dengan menggambar kotak acak."""
+# --- Fungsi Prediksi Simulasi Fallback (Pillow only) ---
+def simulate_detection_fallback(image):
+    """Simulasi deteksi objek hanya dengan Pillow (untuk menghindari libGL error)."""
+    draw = ImageDraw.Draw(image)
+    w, h = image.size
+    
+    # Warna Merah untuk Berantakan
+    line_color = (255, 0, 0) 
+    
+    # Simulasi 3 kotak deteksi menggunakan Pillow
+    # Kotak 1
+    box1 = [(w//5, h//5), (w//3, h//3)]
+    draw.rectangle(box1, outline=line_color, width=3)
+    draw.text((w//5, h//5 - 15), 'Objek Berantakan', fill=line_color)
+
+    # Kotak 2
+    box2 = [(2*w//3, h//4), (3*w//4, 2*h//3)]
+    draw.rectangle(box2, outline=line_color, width=3)
+    draw.text((2*w//3, h//4 - 15), 'Pakaian', fill=line_color)
+
+    # Kotak 3
+    box3 = [(w//4, 3*h//4), (w//2, 4*h//5)]
+    draw.rectangle(box3, outline=line_color, width=3)
+    draw.text((w//4, 3*h//4 - 15), 'Buku', fill=line_color)
+    
+    return image
+
+# --- Fungsi Prediksi Simulasi (cv2 jika tersedia) ---
+def simulate_detection_cv2(image):
+    """Simulasi deteksi objek dengan menggambar kotak acak menggunakan CV2."""
     img_array = np.array(image)
     h, w, _ = img_array.shape
     
@@ -165,37 +201,49 @@ def object_detection_page():
 
         if st.button("Jalankan Deteksi Objek", key="run_detection"):
             with st.spinner('Sedang memproses deteksi objek...'):
+                
+                # Cek apakah model YOLO berhasil dimuat
                 if yolo_model:
                     # Logika Prediksi Model YOLO Nyata
-                    try:
-                        # Resizing gambar agar tidak terlalu besar saat diproses oleh model
-                        img_array = np.array(image.resize((640, 640))) 
-                        
-                        # Melakukan prediksi
-                        results = yolo_model(img_array)
-                        
-                        # Mengambil gambar dengan kotak deteksi
-                        annotated_img = results[0].plot() # Hasil plot adalah numpy array BGR
-                        
-                        # Konversi BGR ke RGB untuk Streamlit
-                        annotated_img = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
-                        
-                        st.subheader("Hasil Deteksi Objek:")
-                        st.image(annotated_img, caption="Hasil Deteksi YOLO", use_column_width=True)
-                        st.success("Deteksi objek berhasil diselesaikan!")
+                    if not cv2_loaded:
+                        st.error("Model YOLO dimuat, tetapi pustaka visualisasi (cv2) gagal. Tidak dapat menampilkan kotak deteksi nyata.")
+                        st.info("Coba instal `libGL1` di lingkungan Anda, atau gunakan Docker image yang mendukung OpenCV.")
+                    else:
+                        try:
+                            # Resizing gambar agar tidak terlalu besar saat diproses oleh model
+                            # YOLO menerima input RGB
+                            img_array = np.array(image.resize((640, 640)))
+                            
+                            # Melakukan prediksi
+                            results = yolo_model(img_array)
+                            
+                            # Mengambil gambar dengan kotak deteksi
+                            annotated_img = results[0].plot() # Hasil plot adalah numpy array BGR
+                            
+                            # Konversi BGR ke RGB untuk Streamlit
+                            annotated_img = cv2.cvtColor(annotated_img, cv2.COLOR_BGR2RGB)
+                            
+                            st.subheader("Hasil Deteksi Objek:")
+                            st.image(annotated_img, caption="Hasil Deteksi YOLO", use_column_width=True)
+                            st.success("Deteksi objek berhasil diselesaikan!")
 
-                    except Exception as e:
-                        st.warning(f"Terjadi kesalahan saat menjalankan prediksi YOLO: {e}. Menggunakan simulasi.")
-                        # Fallback ke simulasi
-                        result_image = simulate_detection(image.resize((600, 400))) 
-                        st.image(result_image, caption="Hasil Deteksi (Simulasi)", use_column_width=True)
-                        st.info("Prediksi disimulasikan karena model nyata gagal dieksekusi.")
+                        except Exception as e:
+                            st.warning(f"Terjadi kesalahan saat menjalankan prediksi YOLO: {e}. Menggunakan simulasi Pillow.")
+                            # Fallback ke simulasi PIL
+                            result_image = simulate_detection_fallback(image.copy()) 
+                            st.image(result_image, caption="Hasil Deteksi (Simulasi Pillow)", use_column_width=True)
+                            st.info("Prediksi disimulasikan karena model nyata gagal dieksekusi atau visualisasi cv2 error.")
                 else:
-                    # Logika Prediksi Simulasi
-                    result_image = simulate_detection(image.resize((600, 400)))
+                    # Logika Prediksi Simulasi (Jika Model Gagal dimuat)
                     st.subheader("Hasil Deteksi Objek (Simulasi):")
-                    st.image(result_image, caption="Hasil Deteksi (Simulasi)", use_column_width=True)
-                    st.info("Model Deteksi Objek tidak dimuat, menggunakan prediksi simulasi.")
+                    if cv2_loaded:
+                        result_image = simulate_detection_cv2(image.copy().resize((600, 400)))
+                        st.image(result_image, caption="Hasil Deteksi (Simulasi CV2)", use_column_width=True)
+                        st.info("Model Deteksi Objek tidak dimuat, menggunakan prediksi simulasi CV2.")
+                    else:
+                        result_image = simulate_detection_fallback(image.copy().resize((600, 400)))
+                        st.image(result_image, caption="Hasil Deteksi (Simulasi Pillow)", use_column_width=True)
+                        st.info("Model Deteksi Objek tidak dimuat, menggunakan prediksi simulasi Pillow.")
 
 
 # --- Halaman Klasifikasi Ruangan (Clean/Messy) ---
