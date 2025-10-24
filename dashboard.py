@@ -262,11 +262,12 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # PERBAIKAN KRITIS: Mengubah target_size dari (96, 96) menjadi (144, 144).
-    # Alasannya: Untuk memperbaiki error shape mismatch. Lapisan Dense mengharapkan 9216 fitur.
-    # Input 96x96 menghasilkan 4096 fitur, yang salah. Input 144x144 secara teoritis
-    # akan menghasilkan output fitur 9216 (karena 9216 / 4096 = 2.25, dan 96 * 1.5 = 144).
-    target_size = (144, 144) 
+    # PERBAIKAN KRITIS UNTUK SHAPE MISMATCH:
+    # Model Klasifikasi mengharapkan Flattened Vector (input ke Dense layer) berukuran 9216.
+    # Ukuran input sebelumnya (144x144) menghasilkan 12544 fitur.
+    # Kita mencoba ukuran input yang lebih umum (Power of 2) yang lebih kecil
+    # dan seharusnya mendekati 9216 fitur.
+    target_size = (128, 128) 
     image_resized = image.resize(target_size)
     
     # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
@@ -275,7 +276,6 @@ def run_cnn_classification(cnn_model, image_bytes):
     img_array = img_array / 255.0 # Normalisasi
     
     # Prediksi
-    # Masalah shape mismatch seharusnya teratasi dengan penyesuaian target_size.
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
     # Asumsikan output adalah (Conf_Clean, Conf_Messy)
