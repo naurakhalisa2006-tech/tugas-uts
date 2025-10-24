@@ -174,15 +174,15 @@ if 'execution_log_data' not in st.session_state:
 
 # --- 3. Fungsi Pemuatan Model (Menggunakan Cache Resource Streamlit) ---
 @st.cache_resource
-def load_ml_models():
+def load_ml_model():
     """Memuat model YOLO dan CNN ke memori dengan caching."""
     if not ML_LIBRARIES_LOADED:
         return None, None # Kembali jika pustaka tidak dimuat
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "models/Siti_Naura_Khalisa_Laporan_4.pt"
-        CNN_MODEL_PATH = "models/SitiNauraKhalisa_Laporan2.h5"
+        YOLO_MODEL_PATH = "model/Siti_Naura_Khalisa_Laporan_4.pt"
+        CNN_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"
 
         # Model 1: Deteksi Objek (YOLOv8)
         yolo_model = YOLO(YOLO_MODEL_PATH)
@@ -194,7 +194,7 @@ def load_ml_models():
         
         return yolo_model, cnn_model
     except Exception as e:
-        st.error(f"Gagal memuat model. Pastikan file berada di folder 'models/' dan pustaka terinstal: {e}")
+        st.error(f"Gagal memuat model. Pastikan file berada di folder 'model/' dan pustaka terinstal: {e}")
         return None, None
 
 # --- 4. Fungsi Real Inference dan Pemrosesan Data ---
