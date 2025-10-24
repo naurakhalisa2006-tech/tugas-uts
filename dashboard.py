@@ -16,7 +16,6 @@ try:
     
     ML_LIBRARIES_LOADED = True
 except ImportError:
-    # st.warning("Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Aplikasi akan berjalan dalam mode SIMULASI yang ditingkatkan.") # Dihapus agar tidak konflik
     ML_LIBRARIES_LOADED = False
 
 # --- 2. Konfigurasi dan Styling (Tema Cute Vision AI / Girly Pastel) ---
@@ -32,19 +31,17 @@ BG_LIGHT = "#F0F0FF"            # Very Light Lavender/White
 CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF88AA" # Soft Coral Pink (Main Accent)
+ACCENT_BLUE = "#88AAFF"         # Pastel Blue/Light Cyan (New secondary accent) <-- ADDED
 ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
-
-# TAMBAHAN BARU: Light Blue Glow sesuai permintaan
-ACCENT_LIGHT_BLUE = "#88AAFF" # Soft, light sky blue/periwinkle
 
 TEXT_CLEAN_STATUS = ACCENT_PURPLE
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
 <style>
-    /* Definisi Keyframe untuk Efek Soft Glow di Tombol */
+    /* Definisi Keyframe untuk Efek Soft Glow (Pink - untuk tombol) */
     @keyframes soft-glow {{
         0% {{
             box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
@@ -57,74 +54,38 @@ custom_css = f"""
         }}
     }}
 
-    /* --- KEYFRAME BARU: SOFT CORAL PINK & LIGHT BLUE GLOW --- */
-    /* Menggunakan ACCENT_LIGHT_BLUE sebagai glow sekunder */
-    @keyframes soft-coral-glow {{
+    /* Definisi Keyframe untuk Efek Dual Color Title Glow */
+    @keyframes dual-color-glow {{
         0%, 100% {{
-            /* Soft Coral Pink shadow + Light Blue glow */
-            text-shadow: 0 0 7px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_LIGHT_BLUE};
-            color: {TEXT_DARK};
-            opacity: 0.9;
+            text-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK};
+            color: {ACCENT_PRIMARY_PINK};
         }}
         50% {{
-            /* Brighter glow at midpoint, color pulses to the pink accent */
-            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PRIMARY_PINK}, 0 0 40px {ACCENT_LIGHT_BLUE};
-            color: {ACCENT_PRIMARY_PINK}; 
-            opacity: 1;
+            text-shadow: 0 0 10px {ACCENT_BLUE}, 0 0 20px {ACCENT_BLUE};
+            color: {ACCENT_BLUE};
         }}
     }}
-
-    /* Keyframe Glitch untuk Efek Hover */
-    @keyframes glitch {{
-        0% {{ transform: translate(0); }}
-        20% {{ transform: translate(-2px, 2px); opacity: 0.9; }}
-        40% {{ transform: translate(-1px, -1px); opacity: 0.85; }}
-        60% {{ transform: translate(3px, 1px); opacity: 0.92; }}
-        80% {{ transform: translate(1px, -2px); opacity: 0.88; }}
-        100% {{ transform: translate(0); }}
-    }}
-
-    /* --- PERUBAHAN UTAMA DI SINI --- */
-    .main-title {{
-        color: {TEXT_DARK}; 
-        font-size: 6rem; /* DIUBAH DARI 5rem MENJADI 6rem UNTUK UKURAN HEADER YANG LEBIH BESAR */
-        font-weight: 900;
-        letter-spacing: 5px;
-        text-transform: uppercase;
-        margin-bottom: 0px;
-        position: relative;
-        text-align: center;
-        /* Menggunakan animasi SOFT CORAL GLOW BARU */
-        animation: soft-coral-glow 2s ease-in-out infinite alternate;
-        transition: color 0.3s;
-    }}
-
-    .main-title:hover {{
-        color: {ACCENT_PRIMARY_PINK}; /* Ganti warna saat hover */
-        animation: glitch 0.2s linear infinite; /* Tambah glitch saat hover */
-    }}
-    
-    .subtitle-center {{
-        color: {ACCENT_PRIMARY_PINK};
-        font-size: 1.2rem; /* UKURAN SUBTITLE TETAP KECIL */
-        margin-top: 5px;
-        text-align: center;
-        font-weight: 600;
-        padding-bottom: 30px;
-        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
-        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
-    }}
-    
-    /* --- END ANIMASI JUDUL BARU --- */
 
     .stApp {{
         background-color: {BG_LIGHT};
         color: {TEXT_DARK};
         font-family: 'Inter', sans-serif;
     }}
-    /* H1 default Streamlit disembunyikan agar tidak konflik dengan .main-title */
+    
+    /* GAYA H1 UTAMA DENGAN ANIMASI DUAL GLOW */
+    .main-title-glow {{
+        animation: dual-color-glow 3s infinite alternate; /* Menerapkan glow animasi */
+        display: inline-block; /* Penting untuk animasi text-shadow yang bersih */
+        font-weight: 900;
+        letter-spacing: 2px;
+    }}
+
+    /* GAYA UMUM H1 */
     h1 {{
-        display: none; 
+        color: {TEXT_DARK}; /* Warna default H1, di-override oleh span.main-title-glow */
+        border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
+        padding-bottom: 10px;
+        text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
     }}
     .modern-card {{
         background-color: {CARD_BG};
@@ -573,9 +534,9 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         }
     else: # Messy or Overridden
         if is_overridden:
-            override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
+              override_note = f"<p style='color:{ACCENT_PINK_MESSY}; font-weight:bold;'>CATATAN SISTEM: Meskipun klasifikasi CNN awal mungkin 'Rapi', YOLOv8 mendeteksi {messy_count} item tidak optimal yang signifikan, memicu Aturan Hibrida OVERRIDE ke status PERINGATAN.</p>"
         else:
-            override_note = ""
+              override_note = ""
 
         return {
             "title": "🚨 STATUS PERINGATAN: SARAN OPTIMASI RUANGAN",
@@ -598,17 +559,17 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
 def render_upload_page():
     """Halaman 1: Upload Gambar Saja."""
     
-    # --- JUDUL BARU TERPUSAT ---
+    # Penambahan class 'main-title-glow' pada span "ROOM INSIGHT"
     st.markdown(f"""
         <header>
-            <div style="text-align: center;">
-                <p class="main-title">ROOM INSIGHT</p>
-                <p class="subtitle-center">CUTE VISION AI - Klasifikasikan Kerapihan Ruangan Anda</p>
-            </div>
+            <h1>
+                <span class="main-title-glow">ROOM INSIGHT</span>
+                <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">CUTE VISION AI</span>
+            </h1>
+            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
         </header>
         <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
-    # --- AKHIR JUDUL BARU ---
     
     st.markdown('<div class="modern-card">', unsafe_allow_html=True)
     st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_PINK};">1. Data Input Matrix (Upload Payload)</h2>', unsafe_allow_html=True)
@@ -637,7 +598,7 @@ def render_upload_page():
         # PANGGIL FUNGSI ML NYATA
         with st.spinner('Running Dual-Model Analysis...'):
             run_ml_analysis() 
-            
+        
     if st.session_state.uploaded_file and not ML_LIBRARIES_LOADED:
         st.warning("Analisis dinonaktifkan karena pustaka Machine Learning tidak tersedia. Harap instal 'ultralytics' dan 'tensorflow' untuk fungsi penuh.")
 
@@ -657,10 +618,8 @@ def render_report_page():
 
     st.markdown(f"""
         <header>
-            <div style="text-align: center;">
-                <h2 style="color: {ACCENT_PRIMARY_PINK}; border-bottom: none; padding-bottom: 5px;">LAPORAN ANALISIS</h2>
-                <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN) untuk: **{st.session_state.uploaded_file.name.upper()}**</p>
-            </div>
+            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
+            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN).</p>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
