@@ -141,8 +141,8 @@ def load_cnn_model(model_path):
 
 # Path file model yang telah diunggah
 # Catatan: Path 'model/' tidak diperlukan di lingkungan ini, langsung gunakan nama file
-yolo_model_path = "Siti Naura Khalisa_Laporan 4.pt" 
-cnn_model_path = "SitiNauraKhalisa_Laporan2.h5"
+yolo_model_path = "model/Siti Naura Khalisa_Laporan 4.pt" 
+cnn_model_path = "model/SitiNauraKhalisa_Laporan2.h5"
 
 # Memuat model saat aplikasi Streamlit dimulai
 yolo_model = load_yolo_model(yolo_model_path)
