@@ -465,8 +465,8 @@ def run_ml_analysis():
         is_overridden = True
     
     if is_clean:
-        final_status = "STATUS: RUANGAN RAPI - OPTIMAL" # Diterjemahkan
-        final_message = f"Pemeriksaan Integritas Sistem: HIJAU (LILAC). Kepercayaan kebersihan {round(conf_clean * 100, 2)}%. Organisasi yang luar biasa. (YOLO Messy Count: {messy_count})."
+        final_status = "STATUS: CLEAN ROOM - OPTIMAL" # Diterjemahkan
+        final_message = f"WAH KEREN KAMU MENJAGA KEBERSIHAN KAMAR"
     else:
         final_status = "STATUS: RUANGAN BERANTAKAN - PERINGATAN" # Diterjemahkan
         
@@ -618,7 +618,7 @@ def render_report_page():
     st.markdown(f"""
         <header>
             <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek (YOLOv8) dan klasifikasi kerapihan (CNN).</p>
+            <p style="color: {ACCENT_PRIMARY_PINK}; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
@@ -664,7 +664,7 @@ def render_report_page():
     with col_clean_conf:
         st.markdown(f"""
             <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PURPLE}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PURPLE};">
-                <p style="color: {ACCENT_PURPLE}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: RAPI</p>
+                <p style="color: {ACCENT_PURPLE}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
                 <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
                 <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
@@ -673,7 +673,7 @@ def render_report_page():
     with col_messy_conf:
         st.markdown(f"""
             <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PINK_MESSY}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PINK_MESSY};">
-                <p style="color: {ACCENT_PINK_MESSY}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: BERANTAKAN</p>
+                <p style="color: {ACCENT_PINK_MESSY}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: MESSY</p>
                 <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
                 <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
