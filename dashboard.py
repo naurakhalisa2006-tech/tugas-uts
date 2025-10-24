@@ -32,7 +32,7 @@ CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
 ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
-ACCENT_NEON_CYAN = "#00FFFF"            # Neon Cyan (Clean Status)   
+ACCENT_NEON_CYAN = "#00FFFF"    # Neon Cyan (Clean Status)    
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
@@ -173,7 +173,7 @@ custom_css = f"""
     .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
     .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
     
-    .clean-border {{ border-color: {ACCENT_NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
+    .clean-border {{ border-color: {ACCENT_NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(0, 255, 255, 0.6) !important; }}
     .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
     
     .tips-box {{
@@ -328,7 +328,8 @@ def draw_boxes_on_image(image_bytes, detections):
     image_width, image_height = image.size
     
     # Menggunakan warna tema baru
-    CLEAN_RGB = ImageColor.getrgb(ACCENT_PURPLE)
+    # FIX: Mengganti ACCENT_PURPLE yang tidak terdefinisi dengan ACCENT_NEON_CYAN
+    CLEAN_RGB = ImageColor.getrgb(ACCENT_NEON_CYAN) 
     MESSY_RGB = ImageColor.getrgb(ACCENT_PINK_MESSY)
     TEXT_BG_RGB = ImageColor.getrgb(CARD_BG) # Teks hitam di atas kotak putih/terang
     
@@ -617,8 +618,8 @@ def render_report_page():
 
     st.markdown(f"""
         <header>
-            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: TEXT_DARK;">{st.session_state.uploaded_file.name.upper()}</span></h1>
-            <p style="color: TEXT_DARK; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
+            <h1>ANALYSIS REPORT: <span style="font-size: 18px; margin-left: 15px; color: {TEXT_DARK};">{st.session_state.uploaded_file.name.upper()}</span></h1>
+            <p style="color: {TEXT_DARK}; font-size: 14px;">Laporan lengkap hasil deteksi objek dan klasifikasi objek.</p>
         </header>
         <div style="margin-bottom: 20px;"></div>
         """, unsafe_allow_html=True)
@@ -669,7 +670,7 @@ def render_report_page():
                 <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
             """, unsafe_allow_html=True)
-        
+            
     with col_messy_conf:
         st.markdown(f"""
             <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PINK_MESSY}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PINK_MESSY};">
