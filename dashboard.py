@@ -28,12 +28,12 @@ st.set_page_config(
 )
 
 # Palet Warna
-BG_DARK = "#121212"              
-CARD_BG = "#1e1e1e"              
-TEXT_LIGHT = "#F0F0F0"         
+BG_DARK = "#121212"            
+CARD_BG = "#1e1e1e"            
+TEXT_LIGHT = "#F0F0F0"        
 ACCENT_PRIMARY_NEON = "#39FF14"  # Hijau Neon
-NEON_CYAN = "#00FFFF"            # Bersih
-NEON_MAGENTA = "#FF073A"         # Berantakan
+NEON_CYAN = "#00FFFF"         # Bersih
+NEON_MAGENTA = "#FF073A"      # Berantakan
 BUTTON_COLOR_NEON = "#39FF14"    # Hijau Neon
 
 custom_css = f"""
@@ -155,8 +155,8 @@ def load_ml_model():
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "model/Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
-        CNN_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
+        YOLO_MODEL_PATH = "Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
+        CNN_MODEL_PATH = "SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
 
         # Model 1: Deteksi Objek (YOLOv8)
         yolo_model = YOLO(YOLO_MODEL_PATH)
@@ -329,16 +329,13 @@ def format_execution_log(results, uploaded_file_name):
     log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
     log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete. (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%)")
     
-    # Log Hybrid Rule
+    # Log Final Decision (Sekarang sepenuhnya berdasarkan YOLO)
     tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
-    final_status_report = "REPORT"
-    
-    if results.get('is_overridden'):
-        log_lines.append(f"[{time.strftime('%H:%M:%S')}] <span style='color:{NEON_MAGENTA};'>WARNING: Hybrid Rule Triggered! Overriding CNN result due to high messy count ({results['messy_count']}).</span>")
-        final_status_report = "OVERRIDE-REPORT"
     
     final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] {final_status_report}: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span>.")
+    
+    # Pesan Log yang diperbarui untuk mencerminkan keputusan YOLO-only
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] FINAL-DECISION: Status ditetapkan berdasarkan YOLOv8 Messy Count ({results['messy_count']}). Status: <span style='color:{tag_color};'><b>{final_status}</b></span>.")
     
     return '<br>'.join(log_lines)
 
@@ -426,8 +423,8 @@ def run_ml_analysis():
         progress_bar.empty()
         return
 
-    # B. Model 2: Klasifikasi Akhir (Keras/CNN)
-    progress_bar.progress(60, text="[Step 2/2] Executing Keras/CNN Classification...")
+    # B. Model 2: Klasifikasi Akhir (Keras/CNN) - Dijalankan untuk Metrik, BUKAN untuk Keputusan Akhir
+    progress_bar.progress(60, text="[Step 2/2] Executing Keras/CNN Classification (for metrics only)...")
     try:
         conf_clean, conf_messy = run_cnn_classification(cnn_model, image_bytes)
     except Exception as e:
@@ -437,36 +434,27 @@ def run_ml_analysis():
     
     progress_bar.progress(90, text="[Step 2/2] Post-processing results...")
     
-    # --- PENENTUAN STATUS AKHIR (Berdasarkan CNN + Hybrid Rule) ---
-    MESSY_DETECTION_THRESHOLD = 3 
+    # --- PENENTUAN STATUS AKHIR (Berdasarkan DETEKSI YOLO SAJA) ---
+    # Sesuai permintaan pengguna: status akhir ditentukan HANYA oleh hitungan YOLO
+    MESSY_DETECTION_THRESHOLD = 3
     
-    # 1. Penentuan Awal (Berdasarkan CNN)
+    # Hitungan confidence dari CNN (untuk display)
     conf_clean_perc = round(conf_clean * 100, 2)
     conf_messy_perc = round(conf_messy * 100, 2)
+
+    # 1. Penentuan Status Penuh Berdasarkan YOLO (Messy Item Count)
+    is_overridden = False # Flag ini sekarang tidak relevan, tapi dipertahankan untuk kompatibilitas data structure
     
-    if conf_clean > conf_messy:
+    if messy_count < MESSY_DETECTION_THRESHOLD:
         is_clean = True
+        # Status BERSIH ditentukan karena jumlah item berantakan di bawah ambang batas
+        final_status = "STATUS: RUANGAN BERSIH (OPTIMAL)"
+        final_message = f"KEPUTUSAN YOLOV8 (SOLE SOURCE): {messy_count} asset UNOPTIMIZED terdeteksi (di bawah batas {MESSY_DETECTION_THRESHOLD}). CNN Conf: {conf_clean_perc}% Clean."
     else:
         is_clean = False
-        
-    # 2. Implementasi Hybrid Rule: Override 'Clean' to 'Messy' jika hitungan YOLO tinggi
-    is_overridden = False
-    if is_clean and messy_count >= MESSY_DETECTION_THRESHOLD:
-        is_clean = False # Override status
-        is_overridden = True
-        
-    # 3. Final Status Assignment dan Pesan
-    if is_clean:
-        final_status = "STATUS: RUANGAN BERSIH (OPTIMAL)"
-        final_message = f"Integritas Sistem: HIJAU (CYAN NEON). Conf. Kebersihan {conf_clean_perc}%. Organisasi sempurna. (YOLO Messy Count: {messy_count})."
-    else:
-        # Status MESSY
+        # Status BERANTAKAN ditentukan karena jumlah item berantakan mencapai atau melebihi ambang batas
         final_status = "STATUS: RUANGAN BERANTAKAN (PERINGATAN)"
-        
-        if is_overridden:
-            final_message = f"HYBRID OVERRIDE: YOLO mendeteksi {messy_count} aset UNOPTIMIZED (Batas: {MESSY_DETECTION_THRESHOLD}). Status Akhir: PERINGATAN. (CNN Conf: {conf_clean_perc}% Clean)."
-        else:
-            final_message = f"Integritas Sistem: MERAH (MAGENTA NEON). Conf. Berantakan {conf_messy_perc}%. Kekacauan terdeteksi. Rekomendasi: Segera bereskan."
+        final_message = f"KEPUTUSAN YOLOV8 (SOLE SOURCE): {messy_count} asset UNOPTIMIZED terdeteksi (MELEBIHI batas {MESSY_DETECTION_THRESHOLD}). CNN Conf: {conf_messy_perc}% Messy."
     
     # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
     processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
@@ -569,9 +557,12 @@ with col_main_results:
         status_text = f'FINAL STATUS: <span class="{css_class_status}">{status_main_text}</span>'
         
         # Display Final Status Box
+        # Mengganti pesan ringkas di sini agar lebih mencerminkan keputusan YOLO
+        final_message_display = results['final_message'].split(': ')[0] + results['final_message'].split(': ')[1]
+        
         st.markdown(f"""
             <div class="status-metric-card" style="margin-top: -10px; border-color: {'#00FFFF' if results['is_clean'] else '#FF073A'};">
-                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">{results['final_message'].split(':')[0]} (YOLO Messy Count: {results['messy_count']})</p>
+                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">{final_message_display}</p>
                 <p style="margin: 0;">{status_text}</p>
             </div>
             """, unsafe_allow_html=True)
