@@ -30,8 +30,8 @@ st.set_page_config(
 BG_LIGHT = "#F0F0FF"            # Very Light Lavender/White
 CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
-ACCENT_PRIMARY_PINK = "#FF88AA" # Soft Coral Pink (Main Accent)
-ACCENT_BLUE = "#88AAFF"         # Pastel Blue/Light Cyan (New secondary accent) <-- ADDED
+ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
+ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
 ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
