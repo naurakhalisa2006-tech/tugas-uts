@@ -33,11 +33,11 @@ st.set_page_config(
 BG_DARK = "#1A1A2E"              
 CARD_BG = "#2C3E50"              
 TEXT_LIGHT = "#EAEAEA"          
-ACCENT_PRIMARY_NEON = "#4DFFFF" 
-NEON_CYAN = "#00FFFF"           
-NEON_MAGENTA = "#FF00FF"        
-TEXT_CLEAN_LIGHT = NEON_CYAN    
-TEXT_MESSY_LIGHT = NEON_MAGENTA 
+ACCENT_PRIMARY_NEON = "#4DFFFF"  
+NEON_CYAN = "#00FFFF"            
+NEON_MAGENTA = "#FF00FF"         
+TEXT_CLEAN_LIGHT = NEON_CYAN     
+TEXT_MESSY_LIGHT = NEON_MAGENTA  
 BUTTON_COLOR_NEON = "#3498DB"
 
 custom_css = f"""
@@ -207,7 +207,7 @@ def load_ml_model():
 # --- 4. Fungsi Real Inference dan Pemrosesan Data ---
 
 def run_yolo_detection(yolo_model, image_path):
-    """Menjalankan inferensi YOLOv8 dan memproses hasilnya."""
+    """Menjalankan inferensi YOLOv8 dan memproses hasilnya, termasuk tagging 'UNCLASSIFIED_ASSET'."""
     
     # Menjalankan prediksi (Mode 'save=False' dan 'conf' dapat disesuaikan)
     results = yolo_model.predict(
@@ -224,9 +224,13 @@ def run_yolo_detection(yolo_model, image_path):
     detections = []
     messy_count = 0
     
-    # Mendefinisikan ID Kelas yang dianggap "Messy" (Ganti sesuai nama kelas model Anda)
-    # Contoh: 'Scattered_Clothes' mungkin memiliki class ID 1, 'Trash_Object' ID 5.
+    # Mendefinisikan ID Kelas yang dianggap "Messy" 
     MESSY_CLASS_NAMES = ["Scattered_Clothes", "Loose_Cables", "Unsorted_Papers", "Trash_Object", "Empty_Bottles", "Food_Wrapper"]
+    
+    # Tambahan: Mendefinisikan kelas yang dianggap "Struktur" atau furnitur utama
+    # Ini membantu membedakan aset inti dari yang 'tidak terklasifikasi'
+    STRUCTURED_CLASS_NAMES = ["Bed", "Desk", "Chair", "Shelf", "Cabinet", "Window", "Door"]
+    
     class_names = result.names # Peta ID ke nama kelas
     
     
@@ -238,13 +242,24 @@ def run_yolo_detection(yolo_model, image_path):
         label = class_names[int(class_id)]
         
         is_messy_item = label in MESSY_CLASS_NAMES
-        classification_tag = 'UNOPTIMIZED' if is_messy_item else 'STRUCTURED'
+        is_structured_item = label in STRUCTURED_CLASS_NAMES
         
+        # LOGIKA BARU UNTUK TAG KLASIFIKASI:
         if is_messy_item:
+            classification_tag = 'UNOPTIMIZED' # Ini adalah aset berantakan
             messy_count += 1
-            
+        elif is_structured_item:
+            classification_tag = 'STRUCTURED' # Ini adalah aset inti ruangan
+        else:
+            # Jika objek terdeteksi tetapi bukan Messy atau Structured, tandai sebagai UNCLASSIFIED
+            classification_tag = 'UNCLASSIFIED_ASSET' 
+
+        # Pastikan label diubah menjadi format yang rapi untuk ditampilkan
+        display_label = label.upper().replace('_', '-')
+        
         detections.append({
-            "asset_id": label.upper().replace('_', '-'),
+            # Ubah label menjadi UNCLASSIFIED ASSET jika tag-nya UNCLASSIFIED_ASSET
+            "asset_id": "UNCLASSIFIED ASSET" if classification_tag == 'UNCLASSIFIED_ASSET' else display_label,
             "confidence_score": round(conf, 4),
             "classification_tag": classification_tag,
             "normalized_coordinates": [
@@ -317,8 +332,14 @@ def draw_boxes_on_image(image_bytes, detections):
         
         label = det['asset_id']
         confidence = det['confidence_score']
+        tag = det['classification_tag']
         
-        box_rgb = CLEAN_RGB if det['classification_tag'] == 'STRUCTURED' else MESSY_RGB
+        # PERUBAHAN: Warna Bounding Box untuk UNCLASSIFIED_ASSET
+        if tag == 'UNOPTIMIZED':
+            box_rgb = MESSY_RGB
+        else:
+            # STRUCTURED dan UNCLASSIFIED_ASSET menggunakan warna CLEAN/CYAN
+            box_rgb = CLEAN_RGB
         
         draw.rectangle([x_min, y_min, x_max, y_max], outline=box_rgb, width=4) 
         
@@ -494,7 +515,6 @@ def run_ml_analysis():
     st.success("SYSTEM> Analysis Completed. Report Generated and Visualization Rendered.")
     
 # --- 7. Tata Letak Streamlit (UI) ---
-# ... (Sama seperti file sebelumnya, dengan fungsi simulasi yang diganti) ...
 
 st.markdown(f"""
     <header>
