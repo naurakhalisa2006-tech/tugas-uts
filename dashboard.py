@@ -565,7 +565,7 @@ def render_upload_page():
                 <span class="main-title-glow">ROOM INSIGHT</span>
                 <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">Clean or Messy?</span>
             </h1>
-            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Kerapihan Ruangan Anda.</p>
+            <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Kerapihan Ruangan Anda</p>
         </header>
         <div style="margin-bottom: 40px;"></div>
         """, unsafe_allow_html=True)
