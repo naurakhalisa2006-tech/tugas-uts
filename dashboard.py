@@ -32,11 +32,11 @@ CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
 ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
-ACCENT_PRIMARY_NEON = "#4DFFFF"  # Neon Biru Muda (Clean Status)
+ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
-TEXT_CLEAN_STATUS = ACCENT_PRIMARY_NEON
+TEXT_CLEAN_STATUS = ACCENT_PURPLE
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
@@ -173,7 +173,7 @@ custom_css = f"""
     .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
     .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
     
-    .clean-border {{ border-color: {ACCENT_PRIMARY_NEON} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
+    .clean-border {{ border-color: {ACCENT_PURPLE} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
     .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
     
     .tips-box {{
@@ -563,7 +563,7 @@ def render_upload_page():
         <header>
             <h1>
                 <span class="main-title-glow">ROOM INSIGHT</span>
-                <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">CLEAN OR MESSY?</span>
+                <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_PINK};">Clean or Messy?</span>
             </h1>
             <p style="color: {TEXT_DARK}; font-size: 16px;">Klasifikasikan Kerapihan Ruangan Anda.</p>
         </header>
@@ -692,7 +692,10 @@ def render_report_page():
             {tips['content']}
         </div>
         """, unsafe_allow_html=True)
-        
+
+    # --- 4. LOG DAN DETAIL TABEL (DIHAPUS SESUAI PERMINTAAN) ---
+    # Bagian ini dikosongkan/dihapus
+
     # Tombol untuk kembali
     st.button("↩ BACK", on_click=lambda: st.session_state.update(app_state='UPLOAD', analysis_results=None, processed_image=None), use_container_width=False)
 
