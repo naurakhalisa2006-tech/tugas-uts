@@ -3,282 +3,272 @@ import numpy as np
 import pandas as pd
 from PIL import Image
 import io
-import time # Untuk simulasi proses loading model
+import time
 
-# --- Konfigurasi Halaman dan Styling ---
+# --- Konfigurasi Halaman dan Styling UNIK & KREATIF ---
 st.set_page_config(
-    page_title="The Room Whisperer (Pembisik Ruangan)",
-    page_icon="✨",
+    page_title="Room Genius: Analisis Clean/Messy",
+    page_icon="🤖",
     layout="wide",
     initial_sidebar_state="expanded"
 )
 
-# Custom CSS untuk tampilan keren dan unik
+# Custom CSS untuk tampilan berwarna, modern, dan unik
 st.markdown("""
     <style>
+    /* Global Background and Font */
     .stApp {
-        background-color: #f7f9fc;
-    }
-    .header-text {
+        background-color: #f0f8ff; /* Light, calming blue background */
         font-family: 'Inter', sans-serif;
-        font-weight: 800;
-        color: #2c3e50;
+    }
+    /* Main Header Styling */
+    h1 {
+        color: #0077b6; /* Deep blue title */
+        font-weight: 900;
         text-align: center;
+        text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.1);
+    }
+    /* Sidebar Styling */
+    [data-testid="stSidebar"] {
+        background-color: #ffffff; /* White sidebar */
+        border-right: 3px solid #0077b6;
+        box-shadow: 2px 0 5px rgba(0, 0, 0, 0.1);
+    }
+    /* Metric Box Styling (Clean/Messy results) */
+    .result-box {
+        padding: 20px;
+        border-radius: 15px;
+        text-align: center;
+        box-shadow: 0 8px 15px rgba(0, 0, 0, 0.1);
         margin-bottom: 20px;
     }
-    .stButton>button {
-        background-color: #3498db;
-        color: white;
-        border-radius: 12px;
-        padding: 10px 20px;
-        transition: all 0.3s;
-        box-shadow: 0 4px #2980b9;
-    }
-    .stButton>button:hover {
-        background-color: #2980b9;
-        box-shadow: 0 2px #1f618d;
-        transform: translateY(2px);
-    }
-    .metric-box {
-        padding: 20px;
-        border-radius: 10px;
-        text-align: center;
-        margin-bottom: 15px;
-        box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
-        color: #2c3e50;
-    }
     .clean-result {
-        background-color: #e6f7ff;
-        border-left: 5px solid #00c763;
+        background-image: linear-gradient(to right, #d4f7d4, #a8e6a8); /* Light green gradient */
+        border: 2px solid #00a800;
+        color: #005a00;
     }
     .messy-result {
-        background-color: #ffe6e6;
-        border-left: 5px solid #e74c3c;
+        background-image: linear-gradient(to right, #ffdddd, #ffaaaa); /* Light red gradient */
+        border: 2px solid #cc0000;
+        color: #800000;
     }
-    .stAlert {
-        border-radius: 10px;
+    /* Metric Card Styling */
+    [data-testid="stMetricValue"] {
+        font-size: 2.5rem;
+        font-weight: 700;
+    }
+    .stProgress > div > div > div > div {
+        background-color: #0077b6; /* Blue progress bar */
     }
     </style>
 """, unsafe_allow_html=True)
 
-# --- Simulasi Data Model (Menggantikan Model .pt dan .h5) ---
+# --- Simulasi Data Model (Inti Logika) ---
 
-# Simulasi Kelas Objek yang dideteksi model YOLO (.pt)
-OBJECT_CLASSES = {
-    'Messy': ['pakaian_berserakan', 'sampah_terbuka', 'piring_kotor', 'kabel_kusut'],
-    'Neutral': ['meja', 'kursi', 'lampu', 'jendela'],
-    'Tidy_Aid': ['kotak_penyimpanan', 'rak_buku_terisi_rapi', 'tempat_sampah_tertutup']
-}
-
-# Simulasi Inferensi Model: Menghasilkan metrik berdasarkan nama file
-def simulate_model_inference(file_name):
-    """
-    Mensimulasikan output dari pipeline model Deteksi (.pt) dan Klasifikasi (.h5).
-    Metrik dihasilkan berdasarkan kriteria unik yang telah ditentukan.
-    """
-    
-    # Kriteria simulasi untuk menghasilkan output yang bervariasi
+# Simulasi Inferensi untuk Klasifikasi Ruangan (Messy/Clean) - Model .h5
+def simulate_classification_inference(file_name):
+    """Mensimulasikan output klasifikasi Clean Room / Messy Room."""
+    # Menghitung Chaos Index dan Tidy Quotient (Metrik Kreatif)
     if 'rapi' in file_name.lower() or 'bersih' in file_name.lower():
-        # Clean Room State
-        chaos_index = np.random.randint(5, 20) 
-        tidy_quotient = np.random.randint(80, 99)
+        tidy_quotient = np.random.randint(85, 99)
+    elif 'berantakan' in file_name.lower() or 'kotor' in file_name.lower() or 'messy' in file_name.lower():
+        tidy_quotient = np.random.randint(10, 35)
+    else:
+        tidy_quotient = np.random.randint(40, 75)
+    
+    chaos_index = 100 - tidy_quotient
+    
+    # Klasifikasi Akhir
+    if tidy_quotient > 70:
+        status = "CLEAN ROOM"
+    elif tidy_quotient < 40:
+        status = "MESSY ROOM"
+    else:
+        status = "NEUTRAL (Ambang Batas)"
+        
+    confidence = tidy_quotient / 100 # Menggunakan Tidy Quotient sebagai Confidence
+    
+    return status, confidence, tidy_quotient, chaos_index
+
+# Simulasi Inferensi untuk Deteksi Objek (YOLO) - Model .pt
+def simulate_detection_inference(file_name):
+    """Mensimulasikan output deteksi objek dan menghitung metrik kekacauan."""
+    
+    if 'rapi' in file_name.lower() or 'bersih' in file_name.lower():
         misplaced_items = np.random.randint(1, 4)
+        clothing_count = np.random.randint(0, 2)
         
     elif 'berantakan' in file_name.lower() or 'kotor' in file_name.lower() or 'messy' in file_name.lower():
-        # Messy Room State
-        chaos_index = np.random.randint(70, 95)
-        tidy_quotient = np.random.randint(5, 30)
         misplaced_items = np.random.randint(15, 30)
+        clothing_count = np.random.randint(8, 20)
         
     else:
-        # Neutral/Random State
-        chaos_index = np.random.randint(30, 65)
-        tidy_quotient = 100 - chaos_index
         misplaced_items = np.random.randint(5, 15)
+        clothing_count = np.random.randint(3, 8)
 
-    # Klasifikasi Akhir (Simulasi Model .h5)
-    if tidy_quotient > 75:
-        room_status = "CLEAN ROOM"
-    elif tidy_quotient < 40:
-        room_status = "MESSY ROOM"
-    else:
-        room_status = "NEUTRAL (Perlu Sedikit Perhatian)"
-        
+    # Data simulasi deteksi dengan bounding box sederhana (hanya metrik)
     return {
-        "status": room_status,
-        "chaos_index": chaos_index, # Indeks Kekacauan (0=Bersih, 100=Chaos Total)
-        "tidy_quotient": tidy_quotient, # Kuosien Kerapihan (100=Sangat Rapi)
-        "misplaced_items": misplaced_items, # Jumlah Objek yang Salah Tempat
-        "detected_classes": {
-            'pakaian_berserakan': np.random.randint(misplaced_items / 2, misplaced_items),
-            'tumpukan_buku_liar': np.random.randint(0, 5),
-            'rak_buku_terisi_rapi': np.random.randint(1, 4),
-            'sampah_terbuka': np.random.randint(0, 3)
-        }
+        "misplaced_items": int(misplaced_items),
+        "clothing_count": int(clothing_count),
+        "book_piles": np.random.randint(0, 3)
     }
 
-# --- Fungsi Utility untuk Visualisasi Simulasi Heatmap ---
+# --- Fungsi Utility untuk Visualisasi Simulasi Bounding Box ---
 
-def draw_simulated_heatmap(image_bytes, chaos_index):
+def draw_simulated_detection(image_bytes, detection_data):
     """
-    Mensimulasikan visualisasi Heatmap Kekacauan pada gambar.
+    Mensimulasikan gambar hasil deteksi objek (yaitu gambar dengan bounding box).
+    Fungsi ini hanya memberikan gambar asli untuk kesederhanaan.
     """
     try:
-        img = Image.open(io.BytesIO(image_bytes)).convert("RGB")
+        img = Image.open(io.BytesIO(image_bytes))
     except:
         return None
 
-    # Simulasikan Heatmap sebagai overlay transparan merah
-    overlay_color = (255, 0, 0)  # Merah
-    # Intensitas transparansi berdasarkan Chaos Index
-    alpha = int((chaos_index / 100) * 128) # Max 128 (setengah transparan)
-    
-    # Buat layer overlay merah dengan alpha yang sesuai
-    overlay = Image.new('RGBA', img.size, overlay_color + (alpha,))
-    
-    # Gabungkan gambar asli dengan overlay
-    combined = Image.alpha_composite(img.convert('RGBA'), overlay)
-    
-    return combined.convert("RGB")
+    return img
 
-# --- JUDUL UTAMA ---
-st.markdown("<h1 class='header-text'>The Room Whisperer ✨</h1>", unsafe_allow_html=True)
-st.markdown("<h3 class='header-text' style='font-weight: 300; font-size: 1.5rem; color: #7f8c8d;'>Klasifikasi Ruangan: Messy atau Clean? - Analisis Berbasis AI</h3>", unsafe_allow_html=True)
+# --- MODUL DETEKSI OBJEK (Menu 1) ---
+def detection_page(uploaded_file):
+    st.title("🔎 Modul Deteksi Objek (Model YOLO)")
+    st.markdown("Identifikasi objek individual (pakaian, buku, sampah) dan hitung metrik kekacauan.")
 
-st.sidebar.title("Instruksi Aplikasi")
-st.sidebar.info("""
-    1. **Unggah Foto:** Ambil atau unggah foto ruangan Anda.
-    2. **Analisis Model:** Aplikasi akan memproses foto (menggunakan simulasi model `YOLO` dan `Keras` Anda).
-    3. **Lihat Hasil:** Dapatkan skor metrik unik seperti **Tidy Quotient** dan saran spesifik.
-""")
+    if uploaded_file is not None:
+        with st.spinner('⏳ Model YOLO sedang menganalisis objek di ruangan Anda...'):
+            time.sleep(2)
+        
+        # Jalankan Simulasi Deteksi
+        detection_results = simulate_detection_inference(uploaded_file.name)
+        
+        col_img, col_metrics = st.columns([2, 1])
 
-# --- UPLOAD GAMBAR ---
-uploaded_file = st.file_uploader(
-    "🖼️ Unggah Foto Ruangan (Format JPG/PNG)",
+        with col_img:
+            image_bytes = uploaded_file.read()
+            # Tampilkan gambar hasil deteksi simulasi
+            simulated_img = draw_simulated_detection(image_bytes, detection_results)
+            st.image(simulated_img, caption="Hasil Deteksi Objek (Simulasi Bounding Box)", use_column_width=True)
+            uploaded_file.seek(0) # Reset pointer file
+        
+        with col_metrics:
+            st.subheader("Metrik Kuantitatif Kekacauan")
+            
+            st.metric(
+                label="Total Objek Salah Tempat",
+                value=f"{detection_results['misplaced_items']} Item",
+                delta="Item yang tidak berada di lokasi seharusnya.",
+                delta_color="off"
+            )
+            st.metric(
+                label="Pakaian Berserakan di Lantai",
+                value=f"{detection_results['clothing_count']} Item",
+                delta="Kontributor utama Chaos Index.",
+                delta_color="off"
+            )
+            st.metric(
+                label="Tumpukan Buku/Kertas Liar",
+                value=f"{detection_results['book_piles']} Tumpukan",
+                delta="Bukan rak yang tersusun rapi.",
+                delta_color="off"
+            )
+            
+            st.markdown("---")
+            st.caption("Data deteksi ini diserahkan ke Modul Klasifikasi.")
+            
+    else:
+        st.warning("Silakan unggah gambar di sidebar untuk memulai deteksi.")
+
+# --- MODUL KLASIFIKASI GAMBAR (Menu 2) ---
+def classification_page(uploaded_file):
+    st.title("⭐ Modul Klasifikasi Gambar (Model Keras)")
+    st.markdown("Klasifikasi akhir ruangan: **CLEAN ROOM** atau **MESSY ROOM**.")
+
+    if uploaded_file is not None:
+        with st.spinner('⏳ Model Keras sedang mengklasifikasi status ruangan...'):
+            time.sleep(2)
+            
+        # Jalankan Simulasi Klasifikasi
+        status, confidence, tidy_quotient, chaos_index = simulate_classification_inference(uploaded_file.name)
+        
+        image_bytes = uploaded_file.read()
+        uploaded_file.seek(0) # Reset pointer file
+        
+        col_img, col_result = st.columns([2, 1])
+        
+        with col_img:
+            st.image(
+                Image.open(io.BytesIO(image_bytes)), 
+                caption="Gambar Ruangan yang Dianalisis", 
+                use_column_width=True
+            )
+
+        with col_result:
+            st.subheader("Hasil Akhir dan Metrik Kreatif")
+            
+            # Tentukan style box
+            box_style = "clean-result" if status == "CLEAN ROOM" else ("messy-result" if status == "MESSY ROOM" else "result-box")
+            color = "#00a800" if status == "CLEAN ROOM" else ("#cc0000" if status == "MESSY ROOM" else "#ff8c00")
+            
+            st.markdown(f"""
+                <div class='result-box {box_style}'>
+                    <p style='margin: 0; font-size: 1.2rem; color: #555;'>STATUS KLASIFIKASI</p>
+                    <h2 style='margin: 5px 0 0; color: {color}; font-size: 3rem; font-weight: 900;'>{status}</h2>
+                </div>
+            """, unsafe_allow_html=True)
+            
+            # Metrik Kreatif
+            st.metric(
+                label="🌟 Tidy Quotient (Kuosien Kerapihan)",
+                value=f"{tidy_quotient}%",
+                delta="Di atas 70% dianggap 'CLEAN'.",
+                delta_color="off"
+            )
+            
+            st.metric(
+                label="🔥 Chaos Index (Indeks Kekacauan)",
+                value=f"{chaos_index}%",
+                delta="Di bawah 30% dianggap 'CLEAN'.",
+                delta_color="off"
+            )
+            
+            st.markdown("---")
+            
+            # Visualisasi Progress Bar Tingkat Kerapihan
+            st.markdown(f"**Tingkat Kerapihan ({tidy_quotient}%)**")
+            st.progress(tidy_quotient / 100)
+            
+            # Saran berwarna
+            if status == "CLEAN ROOM":
+                st.success("🎉 Hasil Luar Biasa! Ruangan ini memenuhi standar CLEAN ROOM.")
+            elif status == "MESSY ROOM":
+                st.error("❌ Peringatan! Ruangan ini diklasifikasikan sebagai MESSY ROOM.")
+            else:
+                st.warning("🔶 Ambang Batas: Diperlukan sedikit usaha untuk mencapai CLEAN ROOM.")
+
+    else:
+        st.warning("Silakan unggah gambar di sidebar untuk memulai klasifikasi.")
+
+# --- MAIN APP LOGIC ---
+
+st.markdown("<h1>ROOM GENIUS: Analisis Kebersihan AI 🤖</h1>", unsafe_allow_html=True)
+
+# Sidebar untuk navigasi menu dan upload file
+st.sidebar.title("Kontrol Analisis")
+menu = st.sidebar.radio(
+    "Pilih Modul",
+    ("Deteksi Objek", "Klasifikasi Gambar")
+)
+
+st.sidebar.markdown("---")
+# Pindahkan uploader ke sidebar agar tersedia di kedua menu
+sidebar_uploaded_file = st.sidebar.file_uploader(
+    "🖼️ Unggah Foto Ruangan (JPG/PNG)",
     type=["jpg", "jpeg", "png"]
 )
 
-if uploaded_file is not None:
-    # --- PROSES ANALISIS ---
-    
-    st.markdown("---")
-    
-    # Display loading state
-    with st.spinner('⏳ Model Deteksi & Klasifikasi sedang bekerja... Analisis Chaos Index...'):
-        time.sleep(2.5) # Simulasi waktu loading model
-    
-    # Jalankan Simulasi Inferensi
-    results = simulate_model_inference(uploaded_file.name)
-    
-    # Tentukan Style Box berdasarkan status
-    box_style = "clean-result" if results['status'] == "CLEAN ROOM" else ("messy-result" if results['status'] == "MESSY ROOM" else "")
-    
-    col1, col2 = st.columns([1, 2])
-    
-    with col1:
-        st.subheader("💡 Hasil Klasifikasi")
-        
-        # Tampilkan Status Ruangan
-        st.markdown(f"""
-            <div class='metric-box {box_style}'>
-                <p style='font-size: 1.2rem; margin-bottom: 5px;'>STATUS RUANGAN</p>
-                <h2 style='font-size: 2.5rem; font-weight: 700; color: {'#00c763' if results['status'] == 'CLEAN ROOM' else ('#e74c3c' if results['status'] == 'MESSY ROOM' else '#f39c12')};'>{results['status']}</h2>
-            </div>
-        """, unsafe_allow_html=True)
-        
-        # Metrik Bervariasi (Tidy Quotient & Chaos Index)
-        st.subheader("📊 Metrik Kerapihan Unik")
-
-        # Tidy Quotient (Kuosien Kerapihan)
-        st.metric(
-            label="✨ Tidy Quotient (100 = Sempurna)",
-            value=f"{results['tidy_quotient']}%",
-            delta=f"Ideal > 75%",
-            delta_color="off"
-        )
-        
-        # Chaos Index (Indeks Kekacauan)
-        st.metric(
-            label="⚠️ Chaos Index (0 = Minimal)",
-            value=f"{results['chaos_index']}/100",
-            delta=f"Berantakan > 60",
-            delta_color="off"
-        )
-        
-        # Jumlah Item Misplaced
-        st.metric(
-            label="🗑️ Objek Salah Tempat (Deteksi)",
-            value=f"{results['misplaced_items']} Item",
-            delta="Fokus di sini!",
-            delta_color="off"
-        )
-
-
-    with col2:
-        st.subheader("📍 Visualisasi & Heatmap Kekacauan")
-        
-        # Simulasi Heatmap
-        image_bytes = uploaded_file.read()
-        simulated_img = draw_simulated_heatmap(image_bytes, results['chaos_index'])
-        
-        if simulated_img:
-            st.image(
-                simulated_img, 
-                caption=f"Visualisasi Heatmap (Warna merah menunjukkan area kepadatan kekacauan tinggi)", 
-                use_column_width=True
-            )
-        else:
-            st.warning("Gagal memuat visualisasi gambar.")
-            
-    st.markdown("---")
-    
-    # --- SARAN TINDAKAN KREATIF ---
-    st.subheader("🎯 Saran Tindakan Terarah (Actionable Insights)")
-    
-    if results['status'] == "CLEAN ROOM":
-        st.balloons()
-        st.success("🎉 SELAMAT! Ruangan Anda memiliki Tidy Quotient yang tinggi. Pertahankan Kerapihan ini!")
-        st.info("Saran Lanjutan: Ulangi analisis ini seminggu sekali untuk memantau konsistensi kebersihan Anda.")
-        
-    elif results['status'] == "MESSY ROOM":
-        st.error("🚨 PERINGATAN! Chaos Index tinggi. Ruangan ini membutuhkan 'Intervensi Kerapihan Cepat'.")
-        
-        st.markdown("Berikut adalah **Misi Kerapihan** Anda:")
-        
-        # Membuat saran dinamis berdasarkan hasil deteksi
-        detected = results['detected_classes']
-        
-        st.markdown("""
-        <style>
-            .mission-item {
-                background-color: #fcebe8; 
-                padding: 10px; 
-                border-radius: 8px; 
-                margin-bottom: 8px; 
-                border-left: 4px solid #e74c3c;
-            }
-        </style>
-        """, unsafe_allow_html=True)
-        
-        if detected.get('pakaian_berserakan', 0) > 5:
-            st.markdown(f"<div class='mission-item'>**Tugas Utama:** Deteksi menemukan **{detected['pakaian_berserakan']} item pakaian** di luar tempatnya. Selesaikan 'Misi Keranjang Kotor' segera!</div>", unsafe_allow_html=True)
-            
-        if detected.get('tumpukan_buku_liar', 0) > 0:
-            st.markdown(f"<div class='mission-item'>**Tugas Tambahan:** Ada **{detected['tumpukan_buku_liar']} tumpukan buku/dokumen** yang tidak stabil. Lakukan 'Misi Stabilisasi Rak'.</div>", unsafe_allow_html=True)
-
-        if detected.get('sampah_terbuka', 0) > 0:
-            st.markdown(f"<div class='mission-item'>**Misi Kebersihan Cepat:** Terdeteksi adanya sampah di luar wadah. Selesaikan 'Misi Zero-Waste'!</div>", unsafe_allow_html=True)
-
-        if results['misplaced_items'] > 20:
-            st.markdown(f"<div class='mission-item'>**Level Darurat:** {results['misplaced_items']} item salah tempat! Mulai dari satu area kecil saja (misal: area meja).</div>", unsafe_allow_html=True)
-
-        
-    else: # Neutral
-        st.warning("⚠️ Status Netral. Ruangan Anda berada di perbatasan Clean/Messy. Perlu sedikit 'dorongan' kerapihan.")
-        st.info("Saran: Fokus pada objek salah tempat dan naikkan Tidy Quotient Anda di atas 75%!")
-
-else:
-    st.info("Ayo coba! Unggah foto ruangan Anda dan biarkan The Room Whisperer menganalisis Chaos Index-nya!")
+# Render halaman berdasarkan pilihan menu
+if menu == "Deteksi Objek":
+    detection_page(sidebar_uploaded_file)
+elif menu == "Klasifikasi Gambar":
+    classification_page(sidebar_uploaded_file)
 
 st.sidebar.markdown("---")
-st.sidebar.caption("Simulasi dibangun dengan Streamlit dan mensimulasikan inferensi dari model YOLO (.pt) dan Keras (.h5) yang Anda sediakan.")
+st.sidebar.caption("Aplikasi ini dibuat dengan Streamlit untuk mensimulasikan fungsionalitas model AI Anda (.pt dan .h5).")
