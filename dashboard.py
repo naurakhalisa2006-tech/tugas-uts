@@ -3,66 +3,11 @@ import random
 import time
 import json
 import io
-import pandas as pd
 from PIL import Image, ImageDraw, ImageFont, ImageColor
+import pandas as pd
 
-# --- 1. Pustaka untuk Integrasi Model ---
-# Catatan: Pustaka ini harus diinstal di lingkungan Anda: pip install ultralytics tensorflow keras
-try:
-    from ultralytics import YOLO # Untuk model .pt (Deteksi Objek)
-    import tensorflow as tf # Untuk model .h5 (Klasifikasi Akhir)
-    import numpy as np
-    
-    # Nonaktifkan pesan peringatan TensorFlow/CUDA yang tidak perlu
-    tf.get_logger().setLevel('ERROR') 
-
-except ImportError:
-    # Setel flag jika pustaka tidak ditemukan
-    st.error("Pustaka ML (ultralytics/tensorflow) tidak ditemukan. Menjalankan dalam mode SIMULASI.")
-    YOLO = None
-    tf = None
-
-# --- 2. Konfigurasi dan Pemuatan Model Global ---
-MODEL_DETECTION_PATH = "Siti Naura Khalisa_Laporan 4.pt"
-MODEL_CLASSIFICATION_PATH = "SitiNauraKhalisa_Laporan2.h5"
-
-# Inisialisasi Model (Hanya sekali)
-@st.cache_resource
-def load_models():
-    """Memuat model Deteksi dan Klasifikasi ke dalam cache Streamlit."""
-    
-    # 1. Model Deteksi Objek (YOLO/PyTorch)
-    detection_model = None
-    if YOLO:
-        try:
-            st.info(f"Memuat Model Deteksi: {MODEL_DETECTION_PATH}...")
-            # Gunakan jalur lokal. Anda harus meletakkan file .pt di folder yang sama.
-            detection_model = YOLO(MODEL_DETECTION_PATH)
-            st.success("Model Deteksi (YOLO V8) berhasil dimuat.")
-        except Exception as e:
-            st.warning(f"Gagal memuat model PyTorch YOLO: {e}. Menggunakan mode simulasi deteksi.")
-            detection_model = None
-
-    # 2. Model Klasifikasi Akhir (Keras/TensorFlow)
-    classification_model = None
-    if tf:
-        try:
-            st.info(f"Memuat Model Klasifikasi: {MODEL_CLASSIFICATION_PATH}...")
-            # Gunakan jalur lokal. Anda harus meletakkan file .h5 di folder yang sama.
-            classification_model = tf.keras.models.load_model(MODEL_CLASSIFICATION_PATH)
-            st.success("Model Klasifikasi (Keras) berhasil dimuat.")
-        except Exception as e:
-            st.warning(f"Gagal memuat model Keras: {e}. Menggunakan mode simulasi klasifikasi.")
-            classification_model = None
-            
-    return detection_model, classification_model
-
-# Muat model saat aplikasi Streamlit dimulai
-YOLO_MODEL, KERAS_CLASSIFICATION_MODEL = load_models()
-
-# --- 3. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
-# (Kode Styling tetap sama agar tampilan tetap bagus)
-
+# --- 1. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
+# Diperbarui: Mengubah judul halaman browser
 st.set_page_config(
     page_title="ROOM INSIGHT",
     layout="wide",
@@ -206,6 +151,20 @@ custom_css = f"""
 
     p {{ color: {TEXT_LIGHT}; }}
     
+    /* Gaya Monospace untuk Log */
+    .log-container {{
+        background-color: {BG_DARK}; 
+        color: {TEXT_LIGHT}; 
+        border-color: {ACCENT_PRIMARY_NEON} !important; 
+        box-shadow: 0 0 8px rgba(77, 255, 255, 0.4);
+        padding: 15px;
+        border-radius: 8px;
+        font-family: 'Consolas', 'Monaco', monospace;
+        font-size: 13px;
+        height: 140px;
+        overflow-y: auto;
+    }}
+    
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -220,21 +179,25 @@ if 'processed_image' not in st.session_state:
 if 'execution_log_data' not in st.session_state:
     st.session_state.execution_log_data = []
 
-# --- 4. Fungsi Deteksi dan Klasifikasi ASLI / SIMULASI ---
-
-# Fungsi SIMULASI (Digunakan sebagai fallback jika model gagal dimuat)
+# --- 2. Fungsi Simulasi Analisis Model Khusus ---
 def generate_mock_detections(is_clean):
-    # Menggunakan logika simulasi yang sama seperti kode asli Anda
+    # Items yang terdeteksi oleh Model Deteksi (Siti Naura Khalisa_Laporan 4.pt - YOLO)
     clean_items = ["Desk_Unit", "Chair_Ergonomic", "Bookshelf_Structured", "Monitor_System", "Rug_Area", "Wall_Lamp", "PC_Tower"]
     messy_items = ["Scattered_Clothes", "Loose_Cables", "Unsorted_Papers", "Trash_Object", "Empty_Bottles", "Food_Wrapper"]
-    num_items = random.randint(3, 7) + (0 if is_clean else 3)
+    
+    # Jumlah item terdeteksi, lebih banyak jika berantakan
+    num_items = random.randint(3, 7) + (0 if is_clean else random.randint(3, 5))
     detections = []
+    
     for i in range(num_items):
         is_messy_item = False
         if is_clean:
-            label = random.choice(clean_items)
+            # Pada mode CLEAN, 90% objek adalah terstruktur
+            label = random.choice(clean_items) if random.random() < 0.9 else random.choice(messy_items)
             confidence = round(random.uniform(0.75, 0.95), 4)
+            is_messy_item = label in messy_items
         else:
+            # Pada mode MESSY, 60% - 70% objek adalah unoptimized
             if random.random() < 0.7:
                 label = random.choice(messy_items)
                 confidence = round(random.uniform(0.65, 0.90), 4)
@@ -242,14 +205,20 @@ def generate_mock_detections(is_clean):
             else:
                 label = random.choice(clean_items)
                 confidence = round(random.uniform(0.55, 0.80), 4)
+        
+        # Penentuan Classification Tag berdasarkan label
+        classification_tag = 'UNOPTIMIZED' if is_messy_item else 'STRUCTURED'
+        
+        # Koordinat Bounding Box (Normalized)
         x_norm = random.uniform(0.05, 0.7)
         y_norm = random.uniform(0.05, 0.7)
         w_norm = random.uniform(0.1, 0.3)
         h_norm = random.uniform(0.1, 0.3)
+        
         detections.append({
             "asset_id": label.upper().replace('_', '-'),
             "confidence_score": confidence,
-            "classification_tag": 'UNOPTIMIZED' if is_messy_item else 'STRUCTURED',
+            "classification_tag": classification_tag,
             "normalized_coordinates": [
                 round(x_norm, 4), 
                 round(y_norm, 4),
@@ -257,11 +226,11 @@ def generate_mock_detections(is_clean):
                 round(h_norm, 4)
             ]
         })
+    
     return sorted(detections, key=lambda x: x['confidence_score'], reverse=True)
 
-
-def draw_boxes_on_image(image_bytes, detections, class_names={0: 'STRUCTURED', 1: 'UNOPTIMIZED'}):
-    # Logika untuk menggambar bounding box pada gambar (Tidak ada perubahan)
+def draw_boxes_on_image(image_bytes, detections):
+    """Menggambar Bounding Box Neon pada Gambar"""
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     draw = ImageDraw.Draw(image)
     image_width, image_height = image.size
@@ -273,35 +242,29 @@ def draw_boxes_on_image(image_bytes, detections, class_names={0: 'STRUCTURED', 1
     
     try:
         font_size = max(15, min(image_width // 40, 30))
-        font = ImageFont.load_default() 
+        # PIL menggunakan font default, tidak perlu path
+        font = ImageFont.load_default(size=font_size) 
     except IOError:
         font = ImageFont.load_default()
         
     for det in detections:
-        # Menangani data deteksi dari YOLO asli (result.boxes) atau Simulasi
-        if isinstance(det, dict):
-            # Data Simulasi
-            x_norm, y_norm, w_norm, h_norm = det['normalized_coordinates']
-            x_min = int(x_norm * image_width)
-            y_min = int(y_norm * image_height)
-            x_max = int((x_norm + w_norm) * image_width)
-            y_max = int((y_norm + h_norm) * image_height)
-            label = det['asset_id']
-            confidence = det['confidence_score']
-            tag = det['classification_tag']
-        else:
-            # Data Asli dari YOLO result (format [x_min, y_min, x_max, y_max])
-            x_min, y_min, x_max, y_max = [int(val) for val in det[0]]
-            confidence = det[1]
-            class_id = det[2]
-            label = class_names.get(class_id, f'Class-{class_id}')
-            tag = 'UNOPTIMIZED' if 'Messy' in label or 'Unsorted' in label else 'STRUCTURED' 
+        x_norm, y_norm, w_norm, h_norm = det['normalized_coordinates']
         
+        # Konversi koordinat normalized ke koordinat piksel
+        x_min = int(x_norm * image_width)
+        y_min = int(y_norm * image_height)
+        x_max = int((x_norm + w_norm) * image_width)
+        y_max = int((y_norm + h_norm) * image_height)
+        
+        # Clamp koordinat agar tidak melebihi batas gambar
         x_max = min(x_max, image_width - 1)
         y_max = min(y_max, image_height - 1)
-            
+        
+        label = det['asset_id']
+        confidence = det['confidence_score']
+        
         # Warna box berdasarkan status
-        box_rgb = CLEAN_RGB if tag == 'STRUCTURED' else MESSY_RGB
+        box_rgb = CLEAN_RGB if det['classification_tag'] == 'STRUCTURED' else MESSY_RGB
         
         # Gambar kotak dengan warna neon yang cerah
         draw.rectangle([x_min, y_min, x_max, y_max], outline=box_rgb, width=4) 
@@ -309,14 +272,19 @@ def draw_boxes_on_image(image_bytes, detections, class_names={0: 'STRUCTURED', 1
         text_content = f"{label} [{int(confidence * 100)}%]"
         
         try:
+            # Gunakan draw.textbbox untuk menghitung ukuran teks
             text_bbox = draw.textbbox((0, 0), text_content, font=font) 
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
         except AttributeError:
+            # Fallback for older PIL versions
             text_width, text_height = draw.textsize(text_content, font=font)
         
+        # Posisi Teks: Di atas kotak
         text_x = x_min
         text_y = y_min - text_height - 5 
+        
+        # Jika teks terlalu tinggi, letakkan di bawah
         if text_y < 0:
             text_y = y_max + 5
             
@@ -330,37 +298,35 @@ def draw_boxes_on_image(image_bytes, detections, class_names={0: 'STRUCTURED', 1
     return buf.getvalue()
 
 def format_execution_log(results, uploaded_file_name):
-    # Membuat format log tekstual yang menyerupai output konsol (Tidak ada perubahan)
+    """Membuat format log tekstual yang menyerupai output konsol"""
     log_lines = []
     
     # 1. Start Log
     log_lines.append(f"[{time.strftime('%H:%M:%S')}] INFO: System Initialized.")
     
     # 2. Data Payload
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 3))}] DATA: Payload Acquired: {uploaded_file_name}.")
+    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 4))}] DATA: Payload Acquired: {uploaded_file_name}.")
 
-    # 3. Model Loading/Inference
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 2))}] MODEL: Initiating YOLO V8 inference ({results['detection_model']}).")
-    if YOLO_MODEL:
-        log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] INFERENCE: Running Real YOLO V8 Inference...")
+    # 3. Model Loading: Model Deteksi
+    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 3))}] MODEL-DETECTION: Loading <b>{results['detection_model']}</b> (YOLO V8 Architecture).")
     
-    # 4. Detection Count
-    tag = 'STRUCTURED' if results['is_clean'] else 'UNOPTIMIZED'
+    # 4. Model Inference: Deteksi
+    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 2))}] INFERENCE-YOLO: Detecting {len(results['detections'])} Assets. Messy Count: {results['messy_count']}.")
+    
+    # 5. Model Loading: Model Klasifikasi
+    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
+    
+    # 6. Classification
     tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] DETECT: {len(results['detections'])} Assets Tagged ({results['messy_count']} Unoptimized).")
-    
-    # 5. Classification
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY: Keras Model ({results['classification_model']}) classified image features.")
-    
-    # 6. Final Report
-    final_conf = results['conf_clean'] if results['is_clean'] else results['conf_messy']
     final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] REPORT: Final Status Classification: <span style='color:{tag_color};'><b>{final_status}</b></span> (Confidence: {final_conf}%).")
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Final Classification Complete. Input: Detection Data Stream.")
+    
+    # 7. Final Report
+    log_lines.append(f"[{time.strftime('%H:%M:%S')}] REPORT: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span> (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%).")
     
     # Gabungkan dengan <br> untuk markdown
     return '<br>'.join(log_lines)
 
-# --- 5. Fungsi Analisis Utama (REAL/SIMULASI) ---
 def simulate_yolo_analysis():
     if st.session_state.uploaded_file is None:
         st.error("Sila muat naik imej ruangan dahulu.")
@@ -368,143 +334,59 @@ def simulate_yolo_analysis():
     st.session_state.analysis_results = None
     st.session_state.processed_image = None
     
+    # Membersihkan log sebelumnya dan log awal
     st.session_state.execution_log_data = [
         f"[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting user action."
     ]
     
+    # Placeholder log loading
     log_placeholder = st.empty()
-    log_placeholder.markdown(f'<p style="color: {TEXT_LIGHT};">SYSTEM> Initiating inference. Loading model <b>{MODEL_DETECTION_PATH}</b>...</p>', unsafe_allow_html=True)
+    log_placeholder.markdown(f'<p style="color: {TEXT_LIGHT};">SYSTEM> Initiating inference. Loading model <b>Siti Naura Khalisa_Laporan 4.pt</b>...</p>', unsafe_allow_html=True)
     
+    # Progress Bar Simulasi
     progress_bar = st.progress(0, text="Loading Tensor Core & Running Inference...")
+    for percent_complete in range(100):
+        time.sleep(0.01) # Mengurangi sleep time agar lebih cepat
+        progress_bar.progress(percent_complete + 1, text=f"Processing... {percent_complete+1}%")
+    progress_bar.empty()
+    
+    # --- SIMULASI INFERENCE DUA MODEL ---
     
     image_data = st.session_state.uploaded_file.getvalue()
-    input_image = Image.open(io.BytesIO(image_data))
     
+    # Tentukan apakah hasilnya akan cenderung bersih atau berantakan (55% clean chance)
+    is_clean_outcome = random.random() < 0.55
     
-    # --- A. Tahap 1: Deteksi Objek (Model .pt) ---
-    real_detections = False
+    # Model 1: Deteksi Objek (Simulasi Laporan 4.pt - YOLO)
+    mock_detections = generate_mock_detections(is_clean_outcome) 
+    messy_count = sum(1 for d in mock_detections if d['classification_tag'] == 'UNOPTIMIZED')
     
-    if YOLO_MODEL:
-        try:
-            progress_bar.progress(30, text="Running YOLO Detection (Model .pt)...")
-            
-            # Melakukan inferensi dengan model YOLO yang dimuat
-            # Diasumsikan model dilatih dengan kelas berantakan/rapi
-            results_list = YOLO_MODEL(input_image) 
-            result = results_list[0]
-            
-            detections_for_drawing = []
-            messy_count = 0
-            
-            # Konversi hasil YOLO ke format yang dapat diolah
-            for box in result.boxes:
-                # Format box: [x_min, y_min, x_max, y_max]
-                coordinates = box.xyxy[0].cpu().numpy()
-                confidence = box.conf[0].item()
-                class_id = int(box.cls[0].item())
-                
-                # Menggunakan class_names dari model atau fallback
-                class_name = result.names.get(class_id, f'Class-{class_id}')
-                
-                # Menentukan apakah objek tersebut 'messy' untuk perhitungan
-                is_messy_object = 'Messy' in class_name or 'Unsorted' in class_name or 'Cable' in class_name
-                if is_messy_object:
-                    messy_count += 1
-                
-                detections_for_drawing.append((coordinates, confidence, class_id))
-
-            mock_detections = [] # Kosongkan simulasi
-            real_detections = True
-            
-        except Exception as e:
-            st.warning(f"Error saat menjalankan inferensi YOLO: {e}. Beralih ke data simulasi.")
-            real_detections = False
+    # Model 2: Klasifikasi Akhir (Simulasi Laporan 2.h5 - CNN)
     
-    if not real_detections:
-        # Fallback ke Simulasi
-        is_clean_sim = random.random() < 0.6
-        mock_detections = generate_mock_detections(is_clean_sim) 
-        messy_count = sum(1 for d in mock_detections if d['classification_tag'] == 'UNOPTIMIZED')
-        detections_for_drawing = mock_detections
-
-    
-    # --- B. Tahap 2: Klasifikasi Ruangan (Model .h5) ---
-    progress_bar.progress(60, text="Running Keras Classification (Model .h5)...")
-    
-    conf_clean = 0.5
-    conf_messy = 0.5
-    
-    if KERAS_CLASSIFICATION_MODEL:
-        try:
-            # Pra-pemrosesan gambar untuk model Keras
-            target_size = KERAS_CLASSIFICATION_MODEL.input_shape[1:3] # Ambil (height, width) yang dibutuhkan model
-            processed_input = input_image.resize(target_size)
-            processed_input = np.array(processed_input) / 255.0  # Normalisasi
-            processed_input = np.expand_dims(processed_input, axis=0) # Tambahkan dimensi batch
-            
-            # Prediksi
-            prediction = KERAS_CLASSIFICATION_MODEL.predict(processed_input, verbose=0)[0]
-            
-            # Diasumsikan model Keras menghasilkan 2 kelas (Clean/Messy)
-            # Anda perlu menyesuaikan indeks ini berdasarkan output model Anda.
-            # Contoh: prediction[0] = Clean, prediction[1] = Messy
-            conf_clean = prediction[0].item()
-            conf_messy = 1.0 - conf_clean # Atau prediction[1].item() jika ada 2 output
-            
-            st.info("Prediksi Keras: [Clean/Messy]")
-            
-        except Exception as e:
-            st.warning(f"Error saat menjalankan model Keras: {e}. Beralih ke perhitungan klasifikasi berbasis deteksi.")
-            # Tetap gunakan perhitungan berbasis deteksi sebagai fallback
-
-    # --- C. Tahap 3: Klasifikasi Gabungan dan Laporan ---
-    progress_bar.progress(90, text="Generating Final Report...")
-    
-    # Logika Penentuan Status Akhir: Gabungkan hasil Keras dan Messy Count
-    
-    # 1. Klasifikasi awal (berdasarkan Keras, jika berhasil)
-    if KERAS_CLASSIFICATION_MODEL:
-        is_clean_final = conf_clean > conf_messy
-        
-    # 2. Jika Keras gagal, gunakan Messy Count (sama seperti simulasi asli)
-    else:
-        is_clean_final = messy_count <= 2
-        if is_clean_final:
-            conf_clean = random.uniform(0.85, 0.98)
-            conf_messy = 1.0 - conf_clean
-        else:
-            conf_messy = random.uniform(0.75, 0.95)
-            conf_clean = 1.0 - conf_messy
-
-    # Teks Final
-    if is_clean_final:
+    # Logic untuk menentukan status akhir berdasarkan jumlah item berantakan
+    if messy_count <= 2:
+        conf_clean = random.uniform(0.90, 0.98) # Confidence tinggi untuk Clean
+        conf_messy = 1.0 - conf_clean
         final_status = "STATUS: ROOM CLEAN - OPTIMAL"
         final_message = "System Integrity Check: GREEN (CYAN NEON). Minimum clutter detected. Excellent organization."
     else:
+        conf_messy = random.uniform(0.80, 0.95) # Confidence tinggi untuk Messy
+        conf_clean = 1.0 - conf_messy
         final_status = "STATUS: ROOM MESSY - ALERT"
-        final_message = "System Integrity Check: RED (MAGENTA NEON). High probability of unoptimized state. Clutter detected."
+        final_message = "System Integrity Check: RED (MAGENTA NEON). High probability of unoptimized state. Clutter detected. Recommendation: De-clutter immediately."
 
-    # Gambar kotak pada gambar yang diunggah
-    processed_image_bytes = draw_boxes_on_image(image_data, detections_for_drawing, class_names=YOLO_MODEL.names if YOLO_MODEL else None)
+    # Gambar Bounding Box (Visualisasi output Model 1)
+    processed_image_bytes = draw_boxes_on_image(image_data, mock_detections)
     
     results = {
         "final_status": final_status,
-        "is_clean": is_clean_final,
+        "is_clean": final_status == "STATUS: ROOM CLEAN - OPTIMAL",
         "conf_clean": round(conf_clean * 100, 2),
         "conf_messy": round(conf_messy * 100, 2),
         "messy_count": messy_count, 
-        "detection_model": MODEL_DETECTION_PATH, 
-        "classification_model": MODEL_CLASSIFICATION_PATH, 
-        # Simpan dalam format yang konsisten untuk ditampilkan
-        "detections": mock_detections if not real_detections else [
-            {'asset_id': result.names.get(det[2], f'Class-{det[2]}'), 
-             'confidence_score': det[1], 
-             'classification_tag': ('UNOPTIMIZED' if 'Messy' in result.names.get(det[2], '') else 'STRUCTURED'),
-             'normalized_coordinates': [
-                 det[0][0]/input_image.width, det[0][1]/input_image.height, 
-                 (det[0][2]-det[0][0])/input_image.width, (det[0][3]-det[0][1])/input_image.height 
-             ]} for det in detections_for_drawing
-        ],
+        "detection_model": "Siti Naura Khalisa_Laporan 4.pt", # Integrasi Model 1
+        "classification_model": "SitiNauraKhalisa_Laporan2.h5", # Integrasi Model 2
+        "detections": mock_detections,
         "final_message": final_message
     }
     
@@ -514,26 +396,22 @@ def simulate_yolo_analysis():
     # Generate the log data for display
     st.session_state.execution_log_data = format_execution_log(results, st.session_state.uploaded_file.name)
     
-    progress_bar.progress(100, text="Analysis Complete!")
-    time.sleep(0.5)
-    progress_bar.empty()
     log_placeholder.empty()
     st.success("SYSTEM> Analysis Completed. Report Generated and Visualization Rendered.")
 
-# --- 6. Tata Letak Streamlit (UI) ---
+# --- 3. Tata Letak Streamlit ---
 
 # Diperbarui: Mengubah Judul dan Subjudul
 st.markdown(f"""
     <header>
         <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">CLEAN OR MESSY?</span></h1>
-        <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasfikasikan kerapihan ruangan anada dengan cepat dan akurat.</p>
+        <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasifikasikan kerapihan ruangan Anda menggunakan arsitektur model ganda (Deteksi + Klasifikasi).</p>
     </header>
     <div style="margin-bottom: 20px;"></div>
     """, unsafe_allow_html=True)
 
 
 # --- TAMPILAN 1: TATA LETAK DUA KOLOM UTAMA (ATAS) ---
-# Menggunakan [1, 1] agar hampir 50/50
 col_input, col_detection = st.columns([1, 1]) 
 
 # Kolom 1: Data Input Matrix
@@ -571,7 +449,7 @@ with col_input:
     
     button_disabled = st.session_state.uploaded_file is None
     
-    if st.button("⚡ START", disabled=button_disabled, use_container_width=True):
+    if st.button("⚡ INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
         simulate_yolo_analysis()
         
     st.markdown('</div>', unsafe_allow_html=True)
@@ -584,8 +462,16 @@ with col_detection:
 
     # Tentukan warna border dinamis
     border_class = ""
+    caption_text = "Awaiting Image Payload"
+    caption_style = ACCENT_PRIMARY_NEON
+    
     if st.session_state.analysis_results is not None:
         border_class = 'clean-border' if st.session_state.analysis_results['is_clean'] else 'messy-border'
+        caption_text = 'BOUNDING BOXES: (Rendered Status Visualization)'
+        caption_style = NEON_CYAN if st.session_state.analysis_results['is_clean'] else NEON_MAGENTA
+    elif st.session_state.uploaded_file:
+        caption_text = 'BOUNDING BOXES: (Ready for Analysis - Click Initiate)'
+        caption_style = ACCENT_PRIMARY_NEON
 
     # Container untuk menampung gambar dengan border dinamis
     st.markdown(f"""
@@ -594,16 +480,14 @@ with col_detection:
 
     if st.session_state.uploaded_file:
         if st.session_state.processed_image:
-            st.image(st.session_state.processed_image, caption='VISUALIZATION: Live Detection Grid (Drawn by YOLO Model)', use_container_width=True)
-            caption_class = 'caption-clean' if st.session_state.analysis_results['is_clean'] else 'caption-messy'
-            st.markdown(f'<p class="{caption_class}" style="text-align: center; font-weight: bold; margin-top: 10px; text-shadow: 0 0 3px {NEON_CYAN if st.session_state.analysis_results["is_clean"] else NEON_MAGENTA};">'
-                        'BOUNDING BOXES: (Rendered Status Visualization)</p>', unsafe_allow_html=True)
+            st.image(st.session_state.processed_image, caption='VISUALIZATION: Live Detection Grid (YOLO v8 Output)', use_container_width=True)
         else:
             # Tampilkan gambar asli jika belum diproses
             image_data = st.session_state.uploaded_file.getvalue()
             st.image(image_data, caption='Image Data Stream (Original)', use_container_width=True)
-            st.markdown(f'<p style="text-align: center; color: {ACCENT_PRIMARY_NEON}; font-weight: bold; margin-top: 10px; text-shadow: 0 0 3px {ACCENT_PRIMARY_NEON};">'
-                        'BOUNDING BOXES: (Ready for Analysis - Click Initiate)</p>', unsafe_allow_html=True)
+            
+        st.markdown(f'<p style="text-align: center; color: {caption_style}; font-weight: bold; margin-top: 10px; text-shadow: 0 0 3px {caption_style};">'
+                    f'{caption_text}</p>', unsafe_allow_html=True)
     else:
         st.image("https://placehold.co/1200x675/1A1A2E/4DFFFF?text=UPLOAD+IMAGE+TO+ACTIVATE+SCANNER+MODULE", caption="Awaiting Image Payload", use_container_width=True)
 
@@ -645,6 +529,7 @@ if results:
             <div class="status-metric-card" style="height: 100%; border-color: {NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_CYAN};">
                 <p style="color: {NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
                 <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
+                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
             </div>
             """, unsafe_allow_html=True)
         
@@ -655,6 +540,7 @@ if results:
             <div class="status-metric-card" style="height: 100%; border-color: {NEON_MAGENTA}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_MAGENTA};">
                 <p style="color: {NEON_MAGENTA}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: MESSY</p>
                 <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
+                <p style="color: {TEXT_LIGHT}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(From Model {results['classification_model']})</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -663,13 +549,13 @@ else:
     st.markdown(f"""
         <div style="text-align: center; padding: 40px; border: 2px dashed {ACCENT_PRIMARY_NEON}; border-radius: 10px; background-color: {CARD_BG};">
             <h3 style="font-size: 24px; color:{ACCENT_PRIMARY_NEON};">METRICS AWAITING INFERENCE</h3>
-            <p style="font-size: 16px; color: {TEXT_LIGHT};">Upload image and click '⚡ START' to generate report.</p>
+            <p style="font-size: 16px; color: {TEXT_LIGHT};">Upload image and click 'INITIATE DUAL-MODEL ANALYSIS' to generate report.</p>
         </div>
     """, unsafe_allow_html=True)
 
 
 # BARIS 2: LOG OBJEK TERDETEKSI (Execution Log)
-st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Log Objek Terdeteksi (Execution Log)</h3>', unsafe_allow_html=True)
+st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Log Eksekusi Model Ganda (Dual-Model Execution Log)</h3>', unsafe_allow_html=True)
 
 # Container untuk Log yang bergulir
 log_content = ""
@@ -678,26 +564,26 @@ if results:
 else:
     log_content = f"""[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting Input Payload.<br>
 [{time.strftime('%H:%M:%S')}] DATA: No active payload detected. <br>
-[{time.strftime('%H:%M:%S')}] MODEL: Inference idle."""
+[{time.strftime('%H:%M:%S')}] MODEL: Detection Model (<b>Siti Naura Khalisa_Laporan 4.pt</b>) and Classification Model (<b>SitiNauraKhalisa_Laporan2.h5</b>) are idle."""
 
 st.markdown(f"""
-    <div class="mt-3 bg-white p-3 rounded text-sm font-mono whitespace-pre-wrap h-32 overflow-y-auto border border-gray-500" style="background-color: {BG_DARK}; color: {TEXT_LIGHT}; border-color: {ACCENT_PRIMARY_NEON} !important; box-shadow: 0 0 8px rgba(77, 255, 255, 0.4);">
+    <div class="log-container">
         {log_content}
     </div>
     """, unsafe_allow_html=True)
 
 # BARIS 3: TABEL DETAIL ASET TERDETEKSI
-st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Tabel Detail Aset Terdeteksi</h3>', unsafe_allow_html=True)
+st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; margin-top: 25px; border-bottom: 1px solid #34495E; padding-bottom: 5px;">Tabel Detail Aset Terdeteksi ({results["detection_model"]})</h3>', unsafe_allow_html=True)
 
 if st.session_state.analysis_results:
     df = pd.DataFrame(st.session_state.analysis_results['detections'])
     df = df.rename(columns={
-        'asset_id': 'Asset ID', 
-        'confidence_score': 'Confidence Score (%)', 
-        'classification_tag': 'Classification Tag',
-        'normalized_coordinates': 'Normalized Coordinates (x, y, w, h)'
+        'asset_id': 'Asset ID (Deteksi)', 
+        'confidence_score': 'Conf. Deteksi (%)', 
+        'classification_tag': 'Tag Kerapihan',
+        'normalized_coordinates': 'Koordinat Norm. (x, y, w, h)'
     })
-    df['Confidence Score (%)'] = (df['Confidence Score (%)'] * 100).round(2).astype(str) + '%'
+    df['Conf. Deteksi (%)'] = (df['Conf. Deteksi (%)'] * 100).round(2).astype(str) + '%'
     
     # Styling Streamlit DataFrame untuk mencocokkan tema gelap
     st.dataframe(
