@@ -33,11 +33,11 @@ st.set_page_config(
 BG_DARK = "#1A1A2E"              
 CARD_BG = "#2C3E50"              
 TEXT_LIGHT = "#EAEAEA"          
-ACCENT_PRIMARY_NEON = "#4DFFFF"  
-NEON_CYAN = "#00FFFF"            
-NEON_MAGENTA = "#FF00FF"         
-TEXT_CLEAN_LIGHT = NEON_CYAN     
-TEXT_MESSY_LIGHT = NEON_MAGENTA  
+ACCENT_PRIMARY_NEON = "#4DFFFF" 
+NEON_CYAN = "#00FFFF"           
+NEON_MAGENTA = "#FF00FF"        
+TEXT_CLEAN_LIGHT = NEON_CYAN    
+TEXT_MESSY_LIGHT = NEON_MAGENTA 
 BUTTON_COLOR_NEON = "#3498DB"
 
 custom_css = f"""
@@ -262,11 +262,11 @@ def run_cnn_classification(cnn_model, image_bytes):
     
     image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
     
-    # PERBAIKAN: Mengubah target_size dari (224, 224) menjadi (96, 96).
-    # Alasannya: Error menunjukkan lapisan Dense mengharapkan 9216 fitur,
-    # yang menyiratkan bahwa model dilatih dengan input yang lebih kecil
-    # (misalnya 96x96, yang kemudian direduksi arsitektur CNN menjadi 9216 fitur saat di-flatten).
-    target_size = (96, 96) 
+    # PERBAIKAN KRITIS: Mengubah target_size dari (96, 96) menjadi (144, 144).
+    # Alasannya: Untuk memperbaiki error shape mismatch. Lapisan Dense mengharapkan 9216 fitur.
+    # Input 96x96 menghasilkan 4096 fitur, yang salah. Input 144x144 secara teoritis
+    # akan menghasilkan output fitur 9216 (karena 9216 / 4096 = 2.25, dan 96 * 1.5 = 144).
+    target_size = (144, 144) 
     image_resized = image.resize(target_size)
     
     # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
@@ -275,8 +275,7 @@ def run_cnn_classification(cnn_model, image_bytes):
     img_array = img_array / 255.0 # Normalisasi
     
     # Prediksi
-    # Masalah shape mismatch harusnya teratasi karena input array sekarang
-    # menghasilkan 9216 fitur setelah melalui lapisan Conv/Pool model yang dimuat.
+    # Masalah shape mismatch seharusnya teratasi dengan penyesuaian target_size.
     predictions = cnn_model.predict(img_array, verbose=0)[0]
     
     # Asumsikan output adalah (Conf_Clean, Conf_Messy)
@@ -335,7 +334,7 @@ def draw_boxes_on_image(image_bytes, detections):
             text_height = text_bbox[3] - text_bbox[1]
         except AttributeError:
             text_width, text_height = draw.textsize(text_content, font=font)
-        
+            
         text_x = x_min
         text_y = y_min - text_height - 5 
         
@@ -427,6 +426,7 @@ def run_ml_analysis():
     try:
         conf_clean, conf_messy = run_cnn_classification(cnn_model, image_bytes)
     except Exception as e:
+        # Menangkap error CNN/Dense layer di sini
         st.error(f"Error saat menjalankan Klasifikasi CNN: {e}")
         progress_bar.empty()
         return
