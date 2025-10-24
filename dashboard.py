@@ -32,11 +32,11 @@ CARD_BG = "#FFFFFF"             # Soft White Card Background
 TEXT_DARK = "#333333"           # Main text color (Dark)
 ACCENT_PRIMARY_PINK = "#FF99C8" # Soft Pink (Main Accent) <-- UPDATED TO SOFT PINK
 ACCENT_BLUE = "#93CCFF"         # Light Blue (New secondary accent) <-- UPDATED TO LIGHT BLUE
-ACCENT_PURPLE = "#AA88FF"       # Pastel Purple/Lilac (Clean Status)
+ACCENT_NEON_CYAN = "#00FFFF"            # Neon Cyan (Clean Status)   
 ACCENT_PINK_MESSY = "#FF3366"   # Hot Pink/Fuschia (Messy Status)
 BUTTON_COLOR_SOFT = "#FFB3D9"   # Soft Pink Button BG
 
-TEXT_CLEAN_STATUS = ACCENT_PURPLE
+TEXT_CLEAN_STATUS = ACCENT_NEON_CYAN
 TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
@@ -81,7 +81,7 @@ custom_css = f"""
 
     /* GAYA UMUM H1 */
     h1 {{
-        color: {TEXT_DARK}; /* Warna default H1, di-override oleh span.main-title-glow */
+        color: {ACCENT_PRIMARY_PINK}; /* Warna default H1, di-override oleh span.main-title-glow */
         border-bottom: 3px solid {ACCENT_PRIMARY_PINK};
         padding-bottom: 10px;
         text-shadow: 1px 1px 2px rgba(0, 0, 0, 0.1);
@@ -173,7 +173,7 @@ custom_css = f"""
     .clean-status-text {{ color: {TEXT_CLEAN_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_CLEAN_STATUS}; }}
     .messy-status-text {{ color: {TEXT_MESSY_STATUS}; font-weight: 900; font-size: 32px; text-shadow: 0 0 2px {TEXT_MESSY_STATUS}; }}
     
-    .clean-border {{ border-color: {ACCENT_PURPLE} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
+    .clean-border {{ border-color: {ACCENT_NEON_CYAN} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(170, 136, 255, 0.6) !important; }}
     .messy-border {{ border-color: {ACCENT_PINK_MESSY} !important; border-width: 4px !important; box-shadow: 0 0 15px rgba(255, 51, 102, 0.6) !important; }}
     
     .tips-box {{
@@ -520,7 +520,7 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
         return {
             "title": "✅ STATUS OPTIMAL: APRESIASI KERAPIHAN",
             "icon": "✨",
-            "color": ACCENT_PURPLE,
+            "color": ACCENT_NEON_CYAN,
             "content": f"""
                 <p>Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. Sistem kami mendeteksi sedikit atau tidak ada <b>ASET TIDAK OPTIMAL</b> (jumlah: {messy_count}).</p>
                 <p><b>Tips Maintenance:</b></p>
@@ -652,7 +652,7 @@ def render_report_page():
     message = results['final_message']
     
     with col_report:
-        border_color = ACCENT_PURPLE if results['is_clean'] else ACCENT_PINK_MESSY
+        border_color = ACCENT_NEON_CYAN if results['is_clean'] else ACCENT_PINK_MESSY
         st.markdown(f"""
             <div class="status-metric-card" style="height: 100%; border-color: {border_color}; box-shadow: 0 0 10px {border_color};">
                 <p style="color: {TEXT_DARK}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">CLASSIFICATION REPORT (Final Status)</p>
@@ -663,8 +663,8 @@ def render_report_page():
             
     with col_clean_conf:
         st.markdown(f"""
-            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_PURPLE}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_PURPLE};">
-                <p style="color: {ACCENT_PURPLE}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
+            <div class="status-metric-card" style="height: 100%; border-color: {ACCENT_NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {ACCENT_NEON_CYAN};">
+                <p style="color: {ACCENT_NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CONFIDENCE: CLEAN</p>
                 <p style="color: {TEXT_DARK}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
                 <p style="color: {TEXT_DARK}; font-size: 10px; margin-top: 5px; opacity: 0.6;">(Dari Model {results['classification_model']})</p>
             </div>
