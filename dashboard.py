@@ -1,675 +1,383 @@
 import streamlit as st
-import random
-import time
-import json
+from PIL import Image
 import io
-from PIL import Image, ImageDraw, ImageFont, ImageColor
-import pandas as pd
+import random
 import numpy as np
 
-# --- 1. Import Pustaka Machine Learning (Hanya akan berfungsi jika diinstal) ---
+# --- ML Imports (Memastikan pustaka tersedia) ---
+# Kami mengimpor pustaka yang diperlukan untuk model yang Anda sediakan:
+# YOLO (PyTorch/Ultralytics) dan CNN (Keras/TensorFlow)
 try:
+    # Import untuk YOLO
+    import torch
     from ultralytics import YOLO
-    # Peringatan: TensorFlow seringkali harus dimuat secara penuh
+    
+    # Import untuk CNN Keras
     import tensorflow as tf
     from tensorflow.keras.models import load_model
-    
-    ML_LIBRARIES_LOADED = True
 except ImportError:
-    st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
-    ML_LIBRARIES_LOADED = False
+    st.error("⚠️ Pustaka machine learning yang diperlukan (torch, ultralytics, tensorflow) tidak ditemukan. Silakan instal.")
+    # st.stop() # Jangan stop jika hanya ingin melihat UI
+    pass
 
-# --- 2. Konfigurasi dan Styling (Tema Cyber Pastel / Vaporwave) ---
+# --- 1. Konfigurasi Halaman Streamlit (Aesthetic) ---
 
+# Mengatur tampilan halaman dengan tema custom
 st.set_page_config(
-    page_title="ROOM INSIGHT",
+    page_title="Cute Vision AI: Aesthetic Analyzer",
     layout="wide",
-    initial_sidebar_state="collapsed"
+    initial_sidebar_state="collapsed",
 )
 
-# Palet Warna
-BG_DARK = "#121212"            
-CARD_BG = "#1e1e1e"            
-TEXT_LIGHT = "#F0F0F0"        
-ACCENT_PRIMARY_NEON = "#39FF14"  # Hijau Neon
-NEON_CYAN = "#00FFFF"         # Bersih
-NEON_MAGENTA = "#FF073A"      # Berantakan
-BUTTON_COLOR_NEON = "#39FF14"    # Hijau Neon
-
-# --- KONSTANTA KLASIFIKASI YOLO BERDASARKAN LOGIKA BARU ---
-# Asumsi label kelas yang digunakan model YOLO Anda untuk menandai area dominan.
-# SESUAIKAN JIKA LABEL ANDA BERBEDA!
-MESSY_AREA_LABEL = "Messy_Area" 
-CLEAN_AREA_LABEL = "Clean_Area"
-
-custom_css = f"""
+# Custom CSS untuk nuansa kawaii/ciwii
+st.markdown("""
 <style>
-    /* Definisi Keyframe untuk Efek Neon Flicker */
-    @keyframes neon-flicker {{
-        0%, 19%, 21%, 23%, 25%, 54%, 56%, 100% {{
-            text-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}, 0 0 10px {ACCENT_PRIMARY_NEON}, 0 0 20px {ACCENT_PRIMARY_NEON}, 0 0 40px rgba(57, 255, 20, 0.5);
-            opacity: 1;
-        }}
-        20%, 24%, 55% {{
-            text-shadow: 0 0 2px {ACCENT_PRIMARY_NEON}, 0 0 5px {ACCENT_PRIMARY_NEON};
-            opacity: 0.9;
-        }}
-    }}
-
-    .stApp {{
-        background-color: {BG_DARK};
-        color: {TEXT_LIGHT};
-        font-family: 'Inter', sans-serif;
-    }}
-    h1 {{
-        color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 3px solid {ACCENT_PRIMARY_NEON};
-        padding-bottom: 10px;
-        animation: neon-flicker 1.8s infinite alternate; 
-    }}
-    .modern-card {{
-        background-color: {CARD_BG};
-        border: 1px solid {ACCENT_PRIMARY_NEON};
-        box-shadow: 0 0 15px rgba(57, 255, 20, 0.4);
-        border-radius: 12px;
+    /* Mengubah warna latar belakang dan teks Streamlit */
+    .main {
+        background: linear-gradient(135deg, #FFC7D4, #D4C7FF); /* Gradien ciwii-pink ke lavender */
+        color: #52436D; /* ciwii-text */
+    }
+    h1, h2, h3, h4, .st-emotion-cache-10trblm { /* Header dan title */
+        color: #52436D !important;
+        text-shadow: 2px 2px 0px #FFD89C; /* Soft Peach shadow */
+    }
+    .stButton>button {
+        background-color: #D4C7FF; /* ciwii-lavender */
+        color: white;
+        font-weight: bold;
+        border: 2px solid #52436D;
+        border-radius: 16px;
+        box-shadow: 4px 4px 0px 0px #FFD89C;
+        transition: all 0.1s;
+    }
+    .stButton>button:hover {
+        background-color: #D4C7FF;
+        box-shadow: 6px 6px 0px 0px #FFD89C;
+        transform: translate(-1px, -1px);
+    }
+    .stButton>button:active {
+        transform: translateY(4px);
+        box-shadow: 0 0 #52436D;
+    }
+    .stFileUploader > div:first-child > div:first-child {
+        border: 4px dashed #C7FFD1; /* ciwii-mint dashed border */
+        border-radius: 20px;
+        background-color: rgba(255, 255, 255, 0.7);
+        padding: 30px;
+    }
+    /* Kotak Hasil */
+    .ciwii-box {
+        background-color: white;
+        border: 3px solid #52436D;
+        border-radius: 20px;
         padding: 20px;
-        margin-bottom: 20px;
-    }}
-    h2 {{
-        color: {ACCENT_PRIMARY_NEON};
-        border-bottom: 1px solid #333333;
-        padding-bottom: 5px;
-    }}
-    
-    /* GAYA UPLOADER */
-    [data-testid="stFileUploader"] {{
-        min-height: 150px; 
-        padding: 10px 20px 10px 20px !important;
-        margin-top: 10px;
-        border: 2px dashed {ACCENT_PRIMARY_NEON} !important; 
-        border-radius: 12px;
-        background-color: {BG_DARK} !important; 
-    }}
-    
-    /* GAYA TOMBOL UTAMA */
-    .stButton > button:nth-child(1) {{
-        background-color: {BUTTON_COLOR_NEON}; 
-        color: {BG_DARK} !important;
-        font-weight: 900;
-        border-radius: 8px;
-        border: none;
-        transition: all 0.3s;
-        box-shadow: 0 0 10px {BUTTON_COLOR_NEON}, 0 0 20px {BUTTON_COLOR_NEON};
-    }}
-    .stButton > button:nth-child(1):hover {{
-        background-color: #2ECC71; /* Slightly darker green */
-        box-shadow: 0 0 15px {BUTTON_COLOR_NEON}, 0 0 25px {BUTTON_COLOR_NEON};
-    }}
-
-    /* STATUS CARD STYLES */
-    .status-metric-card {{
-        background-color: {CARD_BG};
-        border: 2px solid #333333;
-        border-radius: 10px;
-        padding: 15px;
-        text-align: center;
-        margin-bottom: 15px;
-        box-shadow: 0 1px 5px rgba(0,0,0,0.3);
-    }}
-    
-    .clean-status-text {{ color: {NEON_CYAN}; font-weight: 900; font-size: 36px; text-shadow: 0 0 8px {NEON_CYAN}; }}
-    .messy-status-text {{ color: {NEON_MAGENTA}; font-weight: 900; font-size: 36px; text-shadow: 0 0 8px {NEON_MAGENTA}; }}
-    
-    .clean-border-visual {{ border: 4px solid {NEON_CYAN} !important; box-shadow: 0 0 20px rgba(0, 255, 255, 0.6) !important; }}
-    .messy-border-visual {{ border: 4px solid {NEON_MAGENTA} !important; box-shadow: 0 0 20px rgba(255, 7, 58, 0.6) !important; }}
-    
-    .log-container {{
-        background-color: {CARD_BG}; 
-        color: {TEXT_LIGHT}; 
-        border: 1px solid {ACCENT_PRIMARY_NEON} !important;
-        padding: 15px;
-        border-radius: 8px;
-        font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 13px;
-        height: 140px;
-        overflow-y: auto;
-    }}
-    
-    .advice-clean {{ background-color: rgba(0, 255, 255, 0.1); border-left: 5px solid {NEON_CYAN}; padding: 10px; border-radius: 5px; }}
-    .advice-messy {{ background-color: rgba(255, 7, 58, 0.1); border-left: 5px solid {NEON_MAGENTA}; padding: 10px; border-radius: 5px; }}
-    
+        box-shadow: 8px 8px 0px 0px #FFD89C;
+        margin-top: 20px;
+    }
+    /* Chips */
+    .ciwii-chip-clean {
+        background-color: #C7FFD1; /* Soft Mint */
+        color: #52436D;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin: 5px;
+        font-size: 0.9em;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+    }
+    .ciwii-chip-messy {
+        background-color: #FFC7D4; /* Pastel Pink */
+        color: #52436D;
+        padding: 4px 12px;
+        border-radius: 20px;
+        margin: 5px;
+        font-size: 0.9em;
+        font-weight: 600;
+        display: inline-flex;
+        align-items: center;
+    }
 </style>
-"""
-st.markdown(custom_css, unsafe_allow_html=True)
+""", unsafe_allow_html=True)
 
-# Inisialisasi State Session
-if 'uploaded_file' not in st.session_state:
-    st.session_state.uploaded_file = None
-if 'analysis_results' not in st.session_state:
-    st.session_state.analysis_results = None
-if 'processed_image' not in st.session_state:
-    st.session_state.processed_image = None
-if 'execution_log_data' not in st.session_state:
-    st.session_state.execution_log_data = []
 
-# --- 3. Fungsi Pemuatan Model (Menggunakan Cache Resource Streamlit) ---
+# --- 2. Pemuatan Model (Mengganti Placeholder dengan Logika Nyata) ---
+
 @st.cache_resource
-def load_ml_model():
-    """Memuat model YOLO dan CNN ke memori dengan caching."""
-    if not ML_LIBRARIES_LOADED:
-        return None, None
-    
-    try:
-        # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
-        CNN_MODEL_PATH = "SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
-
-        # Model 1: Deteksi Objek (YOLOv8)
-        yolo_model = YOLO(YOLO_MODEL_PATH)
-        
-        # Model 2: Klasifikasi Ruangan (Keras/CNN)
-        tf.get_logger().setLevel('ERROR')
-        cnn_model = load_model(CNN_MODEL_PATH)
-        
-        return yolo_model, cnn_model
-    except Exception as e:
-        st.error(f"FATAL ERROR: Gagal memuat file model dari path. Pastikan file berada di direktori yang sama dan namanya benar: {e}")
-        return None, None
-
-# --- 4. Fungsi Real Inference dan Pemrosesan Data ---
-
-def run_yolo_detection(yolo_model, image_path):
+def load_yolo_model(model_path):
     """
-    Menjalankan inferensi YOLOv8 berdasarkan strategi single-box classification.
-    Model diasumsikan hanya mendeteksi satu kelas dominan (Messy_Area atau Clean_Area).
+    Memuat model Deteksi Objek YOLO (Siti Naura Khalisa_Laporan 4.pt).
+    Menggunakan pustaka Ultralytics YOLO.
     """
-    
-    # Menjalankan prediksi
-    results = yolo_model.predict(
-        source=image_path, 
-        conf=0.25, # Ambang batas kepercayaan minimum
-        iou=0.7,   # Ambang batas IOU
-        verbose=False,
-        save=False
-    )
-    
-    result = results[0] 
-    class_names = result.names
-    
-    # Initialize for the single best detection
-    main_detection = {
-        "asset_id": "NO-DETECTION",
-        "confidence_score": 0.0,
-        "classification_tag": 'UNKNOWN', 
-        "normalized_coordinates": [0, 0, 0, 0]
-    }
-    
-    max_conf = 0.0
-    
-    # Iterate to find the highest confidence detection that is either Messy_Area or Clean_Area
-    for box in result.boxes:
-        conf = box.conf.item() 
-        
-        # We only care about the single highest confidence box 
-        if conf > max_conf:
-            class_id = box.cls.item()
-            if int(class_id) >= len(class_names):
-                continue # Skip unknown classes
-
-            label = class_names[int(class_id)]
-            
-            # Check if this is a classification box (Messy or Clean Area)
-            is_messy_area = label == MESSY_AREA_LABEL
-            is_clean_area = label == CLEAN_AREA_LABEL
-            
-            if is_messy_area or is_clean_area:
-                max_conf = conf
-                x_norm, y_norm, w_norm, h_norm = box.xywhn[0].tolist() 
-                
-                main_detection = {
-                    "asset_id": label.upper().replace('_', '-'),
-                    "confidence_score": round(conf, 4),
-                    "classification_tag": 'UNOPTIMIZED' if is_messy_area else 'STRUCTURED',
-                    "normalized_coordinates": [
-                        round(x_norm, 4), 
-                        round(y_norm, 4),
-                        round(w_norm, 4),
-                        round(h_norm, 4)
-                    ]
-                }
-
-    # The list of detections will contain only the single classification box, or be empty
-    detections = [main_detection] if main_detection["asset_id"] != "NO-DETECTION" else []
-    
-    # Return the status label and its confidence for the final decision
-    yolo_status_label = main_detection["asset_id"]
-    yolo_confidence = main_detection["confidence_score"]
-    
-    # messy_count is now irrelevant, but we return 1 if messy area is found for compatibility 
-    # with the get_advice function's old structure, though we will fix get_advice.
-    return detections, yolo_status_label, yolo_confidence
-
-
-def run_cnn_classification(cnn_model, image_bytes):
-    """Menjalankan klasifikasi CNN pada gambar mentah."""
-    
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    
-    # Perbaikan ukuran gambar untuk menghindari shape mismatch pada model Keras/CNN
-    target_size = (128, 128) 
-    image_resized = image.resize(target_size)
-    
-    # Konversi ke array Numpy dan normalisasi (misalnya 0-1)
-    img_array = np.array(image_resized)
-    img_array = np.expand_dims(img_array, axis=0) # Tambahkan dimensi batch
-    img_array = img_array / 255.0 # Normalisasi
-    
-    # Prediksi
-    predictions = cnn_model.predict(img_array, verbose=0)[0]
-    
-    # Asumsi output adalah (Conf_Clean, Conf_Messy).
-    # Pastikan urutan ini benar sesuai dengan model Anda.
-    conf_clean = predictions[0]  
-    conf_messy = predictions[1]  
-    
-    return conf_clean, conf_messy
-
-# --- 5. Fungsi Utilitas Visualisasi dan Log ---
-
-def draw_boxes_on_image(image_bytes, detections):
-    """Menggambar Bounding Box Neon pada Gambar dari hasil deteksi."""
-    image = Image.open(io.BytesIO(image_bytes)).convert("RGB")
-    draw = ImageDraw.Draw(image)
-    image_width, image_height = image.size
-    
-    CLEAN_RGB = ImageColor.getrgb(NEON_CYAN)
-    MESSY_RGB = ImageColor.getrgb(NEON_MAGENTA)
-    TEXT_RGB = ImageColor.getrgb(BG_DARK)
-    
     try:
-        # Atur ukuran font secara dinamis
-        font_size = max(15, min(image_width // 40, 30))
-        font = ImageFont.load_default(size=font_size) 
-    except IOError:
-        font = ImageFont.load_default()
-        
-    for det in detections:
-        # Hanya tampilkan jika ada deteksi yang valid
-        if det['asset_id'] == "NO-DETECTION":
-            continue
-            
-        # Koordinat Normalized (x_center, y_center, w, h) dari YOLO
-        x_norm, y_norm, w_norm, h_norm = det['normalized_coordinates']
-        
-        # Konversi YOLO xywhn ke PIXEL xyxy
-        x_min = int((x_norm - w_norm/2) * image_width)
-        y_min = int((y_norm - h_norm/2) * image_height)
-        x_max = int((x_norm + w_norm/2) * image_width)
-        y_max = int((y_norm + h_norm/2) * image_height)
-        
-        # Clamp koordinat
-        x_max = min(x_max, image_width - 1)
-        y_max = min(y_max, image_height - 1)
-        x_min = max(0, x_min)
-        y_min = max(0, y_min)
-        
-        label = det['asset_id']
-        confidence = det['confidence_score']
-        
-        box_rgb = CLEAN_RGB if det['classification_tag'] == 'STRUCTURED' else MESSY_RGB
-        
-        draw.rectangle([x_min, y_min, x_max, y_max], outline=box_rgb, width=4) 
-        
-        text_content = f"{label} [{int(confidence * 100)}%]"
-        
-        try:
-            text_bbox = draw.textbbox((0, 0), text_content, font=font) 
-            text_width = text_bbox[2] - text_bbox[0]
-            text_height = text_bbox[3] - text_bbox[1]
-        except AttributeError:
-            text_width, text_height = draw.textsize(text_content, font=font)
-            
-        text_x = x_min
-        text_y = y_min - text_height - 5 
-        
-        if text_y < 0:
-            text_y = y_max + 5
-            
-        draw.rectangle([text_x, text_y, text_x + text_width + 5, text_y + text_height + 5], fill=box_rgb)
-        draw.text((text_x + 2, text_y + 2), text_content, font=font, fill=TEXT_RGB) 
-        
-    buf = io.BytesIO()
-    image.save(buf, format='JPEG')
-    return buf.getvalue()
-
-def format_execution_log(results, uploaded_file_name):
-    """Membuat format log tekstual yang menyerupai output konsol"""
-    log_lines = []
-    
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] INFO: System Initialized.")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 4))}] DATA: Payload Acquired: {uploaded_file_name}.")
-
-    # Log Model 1: Deteksi (Sekarang Klasifikasi Single-Box)
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 3))}] MODEL-DETECTION: Loading <b>{results['detection_model']}</b> (YOLO V8 - Single-Box).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 2))}] INFERENCE-YOLO: Deteksi Klasifikasi Utama: {results['yolo_status_label']} ({results['yolo_conf_perc']}% Conf).")
-    
-    # Log Model 2: Klasifikasi
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL-CLASSIFICATION: Loading <b>{results['classification_model']}</b> (Keras/CNN).")
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] CLASSIFY-CNN: Initial Classification Complete. (Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%)")
-    
-    # Log Final Decision (Sekarang sepenuhnya berdasarkan YOLO/Fallback)
-    tag_color = NEON_CYAN if results['is_clean'] else NEON_MAGENTA
-    
-    final_status_short = results['final_status'].split(': ')[1].split('(')[0].strip()
-    
-    # Pesan Log yang diperbarui untuk mencerminkan keputusan YOLO-only
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] FINAL-DECISION: Status ditetapkan berdasarkan YOLOv8 Label. Status: <span style='color:{tag_color};'><b>{final_status_short}</b></span>.")
-    
-    return '<br>'.join(log_lines)
-
-def get_advice(is_clean, yolo_status_label):
-    """Memberikan saran berdasarkan hasil analisis dari deteksi label YOLO."""
-    if is_clean:
-        advice_html = f"""
-        <div class="advice-clean">
-            <h3 style="color: {NEON_CYAN}; margin-top: 0; font-size: 18px;">✨ Protokol Kebersihan Lulus!</h3>
-            <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 0;">Sistem mengonfirmasi status **OPTIMAL** berdasarkan deteksi **{yolo_status_label}**. Terus pertahankan organisasi yang sangat baik ini.</p>
-            <p style="color: {TEXT_LIGHT}; font-size: 12px; margin-top: 5px; opacity: 0.8;">*Tips Lanjutan: Deteksi utama Anda menunjukkan area terstruktur yang menonjol. Pertahankan keunggulan ini!</p>
-        </div>
-        """
-    else:
-        
-        advice_html = f"""
-        <div class="advice-messy">
-            <h3 style="color: {NEON_MAGENTA}; margin-top: 0; font-size: 18px;">🚨 KODE MERAH: Perlu Tindakan Segera!</h3>
-            <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 0;">Sistem mendeteksi area **BERANTAKAN** yang menonjol dengan label **{yolo_status_label}**. Fokuskan pembersihan pada area yang ditandai dalam visualisasi.</p>
-            <p style="color: {TEXT_LIGHT}; font-size: 12px; margin-top: 5px; opacity: 0.8;">*Tindakan Cepat: Segera tangani ketidakrapian di area yang ditandai untuk mengembalikan status ke OPTIMAL.</p>
-        </div>
-        """
-    return advice_html
-
-# --- 6. Fungsi Utama Alur Kerja ML ---
-
-def run_ml_analysis():
-    """Menjalankan alur kerja ML yang nyata."""
-    
-    if not ML_LIBRARIES_LOADED:
-        st.error("Analisis dibatalkan: Pustaka Machine Learning gagal dimuat saat startup.")
-        return
-
-    if st.session_state.uploaded_file is None:
-        st.error("Sila muat naik imej ruangan dahulu.")
-        return
-    
-    # 1. Muat Model
-    yolo_model, cnn_model = load_ml_model()
-    
-    if yolo_model is None or cnn_model is None:
-        st.error("Analisis dibatalkan: File Model gagal dimuat dari direktori.")
-        return
-
-    st.session_state.analysis_results = None
-    st.session_state.processed_image = None
-    st.session_state.execution_log_data = []
-
-    
-    # Placeholder log dan progress bar
-    log_placeholder = st.empty()
-    log_placeholder.markdown(f'<p style="color: {TEXT_LIGHT};">SYSTEM> Initiating inference. Loading models...</p>', unsafe_allow_html=True)
-    
-    progress_bar = st.progress(0, text="Loading Tensor Core & Running Inference...")
-    
-    # 2. Persiapan Data
-    image_bytes = st.session_state.uploaded_file.getvalue()
-    
-    # Simpan file secara sementara untuk dibaca oleh YOLO (YOLOv8 sering membaca dari path)
-    temp_path = "temp_upload.jpg"
-    with open(temp_path, "wb") as f:
-        f.write(image_bytes)
-        
-    # --- ALUR KERJA ML NYATA ---
-    
-    # A. Model 1: Deteksi Objek (YOLOv8) - Sekarang Klasifikasi Single-Box
-    progress_bar.progress(30, text="[Step 1/2] Executing YOLOv8 Single-Box Classification...")
-    try:
-        # PENTING: Sekarang mengembalikan label status dan confidence, BUKAN hitungan.
-        detections, yolo_status_label, yolo_confidence = run_yolo_detection(yolo_model, temp_path)
+        # PENTING: Menggunakan Ultralytics YOLO untuk memuat model .pt
+        model_yolo = YOLO(model_path)
+        st.success("✅ Model YOLO (.pt) berhasil dimuat.")
+        return model_yolo
+    except NameError:
+        st.error("Gagal memuat model YOLO: Pustaka Ultralytics atau torch belum terinstal/terimpor.")
+        return None
     except Exception as e:
-        st.error(f"Error saat menjalankan Deteksi YOLOv8: {e}")
-        progress_bar.empty()
-        return
+        st.error(f"Gagal memuat model YOLO: {e}")
+        return None
 
-    # B. Model 2: Klasifikasi Akhir (Keras/CNN) - Dijalankan untuk Metrik & Fallback
-    progress_bar.progress(60, text="[Step 2/2] Executing Keras/CNN Classification (for metrics & fallback)...")
+@st.cache_resource
+def load_cnn_model(model_path):
+    """
+    Memuat model Klasifikasi Citra CNN (SitiNauraKhalisa_Laporan2.h5).
+    Menggunakan pustaka Keras/TensorFlow.
+    """
     try:
-        conf_clean, conf_messy = run_cnn_classification(cnn_model, image_bytes)
+        # PENTING: Menggunakan Keras untuk memuat model .h5
+        model_cnn = load_model(model_path, compile=False) # compile=False mempercepat pemuatan
+        st.success("✅ Model CNN (.h5) berhasil dimuat.")
+        return model_cnn
+    except NameError:
+        st.error("Gagal memuat model CNN: Pustaka TensorFlow belum terinstal/terimpor.")
+        return None
     except Exception as e:
-        st.error(f"Error saat menjalankan Klasifikasi CNN: {e}")
-        progress_bar.empty()
-        return
-    
-    progress_bar.progress(90, text="[Step 2/2] Post-processing results...")
-    
-    # --- PENENTUAN STATUS AKHIR (Berdasarkan YOLO Single-Box atau Fallback CNN) ---
-    
-    # Hitungan confidence dari CNN (untuk display)
-    conf_clean_perc = round(conf_clean * 100, 2)
-    conf_messy_perc = round(conf_messy * 100, 2)
+        st.error(f"Gagal memuat model CNN: {e}")
+        return None
 
-    # Ambil confidence dari hasil YOLO
-    yolo_conf_perc = round(yolo_confidence * 100, 2)
+# Path file model yang telah diunggah
+# Catatan: Path 'model/' tidak diperlukan di lingkungan ini, langsung gunakan nama file
+yolo_model_path = "Siti Naura Khalisa_Laporan 4.pt" 
+cnn_model_path = "SitiNauraKhalisa_Laporan2.h5"
+
+# Memuat model saat aplikasi Streamlit dimulai
+yolo_model = load_yolo_model(yolo_model_path)
+cnn_model = load_cnn_model(cnn_model_path)
+
+# Jika salah satu model gagal dimuat, hentikan eksekusi
+if yolo_model is None or cnn_model is None:
+    # Streamlit akan menampilkan pesan error di fungsi load
+    st.stop()
     
-    is_messy_detected = yolo_status_label == MESSY_AREA_LABEL.upper().replace('_', '-')
-    is_clean_detected = yolo_status_label == CLEAN_AREA_LABEL.upper().replace('_', '-')
-    is_no_detection = yolo_status_label == "NO-DETECTION"
+# --- 3. Data Konstan dan Logika Analisis ---
+
+# Data Simulasi (Gunakan nama kelas dari pelatihan model Anda)
+# Ini digunakan untuk mengkategorikan objek yang terdeteksi oleh YOLO
+MESSY_CLASSES = ["Baju Kotor", "Kabel Berantakan", "Piring Bekas", "Sampah Kertas", "Kaos Kaki Hilang", "Sprei Kusut", "Buku Tergeletak"]
+CLEAN_CLASSES = ["Karpet Rapi", "Meja Bersih", "Tanaman Hias", "Buku Tersusun", "Kaca Mengkilap", "Bantal Tersusun", "Lilin Aromaterapi"]
+
+def run_yolo_detection(image: Image.Image, model: YOLO):
+    """
+    Fungsi untuk menjalankan model YOLO (.pt) yang sesungguhnya.
+    Output adalah list of strings (nama objek yang terdeteksi).
+    """
+    st.info("YOLO: Sedang melakukan Deteksi Objek...")
     
-    is_clean = False
-    final_status = ""
-    final_message = ""
+    # Menjalankan inferensi YOLO
+    # Menggunakan conf default 0.4 dan iou 0.5 untuk deteksi (dapat disesuaikan)
+    results = model(image, conf=0.4, iou=0.5, verbose=False) 
     
-    if is_messy_detected:
-        is_clean = False
-        final_status = "STATUS: RUANGAN BERANTAKAN (YOLO PRIMER)"
-        final_message = f"KEPUTUSAN YOLOV8 (PRIMER): Area {yolo_status_label} terdeteksi dengan Conf: {yolo_conf_perc}%. CNN Conf: {conf_messy_perc}% Messy."
-    elif is_clean_detected:
-        is_clean = True
-        final_status = "STATUS: RUANGAN BERSIH (YOLO PRIMER)"
-        final_message = f"KEPUTUSAN YOLOV8 (PRIMER): Area {yolo_status_label} terdeteksi dengan Conf: {yolo_conf_perc}%. CNN Conf: {conf_clean_perc}% Clean."
+    detected_objects = []
+    
+    # Memproses hasil dari objek yang terdeteksi
+    for result in results:
+        # result.names adalah dictionary yang memetakan index ke nama class
+        class_names = result.names
+        
+        # result.boxes.cls adalah tensor berisi index kelas yang terdeteksi
+        for cls_index in result.boxes.cls.tolist():
+            name = class_names.get(int(cls_index), f"Unknown Class {int(cls_index)}")
+            detected_objects.append(name)
+
+    # Hanya ambil objek unik (dan batasi jumlahnya untuk tampilan)
+    detected_objects = list(set(detected_objects))
+    
+    # Jika tidak ada deteksi, beri hasil yang netral
+    if not detected_objects:
+        detected_objects = ["Tidak ada objek spesifik terdeteksi"]
+        
+    return detected_objects
+
+def run_cnn_classification(image: Image.Image, model: keras.Model):
+    """
+    Fungsi untuk menjalankan model Klasifikasi Citra CNN (.h5) yang sesungguhnya.
+    Output adalah tuple (category_string, confidence_float).
+    """
+    st.info("CNN: Sedang melakukan Klasifikasi Ruangan...")
+    
+    # Asumsi: Model Keras Anda dilatih dengan input 224x224, 3 channel (RGB)
+    target_size = (224, 224) 
+    
+    # 1. Preprocessing gambar
+    img = image.resize(target_size) 
+    img_array = np.array(img, dtype='float32') 
+    
+    # 2. Tambahkan dimensi batch (1, 224, 224, 3)
+    img_array = np.expand_dims(img_array, axis=0) 
+    
+    # 3. Normalisasi (Asumsi model dilatih dengan normalisasi 0-255 -> 0-1)
+    img_array = img_array / 255.0 
+    
+    # 4. Kelas output yang diasumsikan
+    # Ganti urutan kelas di sini jika urutan "Clean" dan "Messy" terbalik pada pelatihan Anda
+    class_labels = ["Clean", "Messy"] 
+    
+    # 5. Inferensi
+    prediction = model.predict(img_array, verbose=0)
+    
+    # 6. Ambil index kelas dengan probabilitas tertinggi
+    predicted_index = np.argmax(prediction[0])
+    confidence_value = prediction[0][predicted_index]
+    
+    final_category = class_labels[predicted_index]
+    confidence_str = f"{confidence_value * 100:.1f}% Confidence"
+    
+    return final_category, confidence_str
+
+def combine_results(yolo_results, cnn_category):
+    """
+    Menggabungkan hasil YOLO dan CNN untuk rekomendasi akhir.
+    """
+    # Hitung berapa banyak objek berantakan yang ditemukan oleh YOLO
+    messy_count = sum(1 for obj in yolo_results if obj in MESSY_CLASSES)
+    
+    # Tentukan kategori rekomendasi dari gabungan kedua model
+    if cnn_category == "Clean" and messy_count <= 2:
+        # Konsisten: CNN Clean, YOLO sedikit/tidak berantakan
+        return "Clean", messy_count
+    elif cnn_category == "Messy" and messy_count >= 3:
+        # Konsisten: CNN Messy, YOLO banyak berantakan
+        return "Messy", messy_count
+    elif messy_count >= 3 and cnn_category == "Clean":
+        # Konflik: CNN bilang bersih, tapi YOLO menemukan banyak sampah (Prioritas YOLO untuk item spesifik)
+        return "Messy", messy_count
     else:
-        # Fallback ke keputusan CNN jika YOLO gagal mendeteksi kotak utama
-        if conf_clean_perc > conf_messy_perc:
-             is_clean = True
-             final_status = "STATUS: RUANGAN BERSIH (FALLBACK CNN)"
-             final_message = f"KEPUTUSAN FALLBACK: YOLO tidak mendeteksi area spesifik. Menggunakan CNN Conf: {conf_clean_perc}% Clean."
-        else:
-             is_clean = False
-             final_status = "STATUS: RUANGAN BERANTAKAN (FALLBACK CNN)"
-             final_message = f"KEPUTUSAN FALLBACK: YOLO tidak mendeteksi area spesifik. Menggunakan CNN Conf: {conf_messy_perc}% Messy."
-    
-    # C. Visualisasi Bounding Box (Menggunakan hasil YOLO)
-    processed_image_bytes = draw_boxes_on_image(image_bytes, detections)
-    
-    results = {
-        "final_status": final_status,
-        "is_clean": is_clean,
-        "conf_clean": conf_clean_perc, # Simpan dalam persentase
-        "conf_messy": conf_messy_perc, # Simpan dalam persentase
-        "messy_count": 1 if is_messy_detected else 0, # Kembalikan ke format lama untuk menghindari error di get_advice/table
-        "detection_model": "Siti Naura Khalisa_Laporan 4.pt",
-        "classification_model": "SitiNauraKhalisa_Laporan2.h5",
-        "detections": detections,
-        "final_message": final_message,
-        "yolo_status_label": yolo_status_label,
-        "yolo_conf_perc": yolo_conf_perc
-    }
-    
-    progress_bar.progress(100, text="Analysis Complete. Generating Report.")
-    progress_bar.empty()
+        # Konflik atau Clean sejati (misal: CNN Messy tapi YOLO hanya deteksi 1-2 item)
+        # Ambil keputusan berdasarkan CNN jika YOLO tidak jelas
+        return cnn_category, messy_count
 
-    st.session_state.processed_image = processed_image_bytes
-    st.session_state.analysis_results = results
-    
-    st.session_state.execution_log_data = format_execution_log(results, st.session_state.uploaded_file.name)
-    
-    log_placeholder.empty()
-    st.success("SYSTEM> Analysis Completed. Report Generated and Visualization Rendered.")
-    
-# --- 7. Tata Letak Streamlit (UI) ---
 
-st.markdown(f"""
-    <header>
-        <h1>ROOM INSIGHT <span style="font-size: 18px; margin-left: 15px; color: {ACCENT_PRIMARY_NEON};">DUAL-MODEL CLASSIFIER</span></h1>
-        <p style="color: {TEXT_LIGHT}; font-size: 14px;">Klasifikasikan kerapihan ruangan menggunakan model Deteksi Objek (YOLOv8) dan Klasifikasi Gambar (CNN).</p>
-    </header>
-    <div style="margin-bottom: 20px;"></div>
+# --- 4. Tampilan Utama Aplikasi Streamlit ---
+
+def main():
+    # Header
+    st.markdown(f"""
+        <div style="text-align: center;">
+            <h1 style="font-size: 3.5em; font-weight: 800; line-height: 1.1;">
+                <span style="display: inline-block; transform: rotate(6deg); color: #FFC7D4;">🎀</span> 
+                Cute Room Analyzer 
+                <span style="display: inline-block; transform: rotate(-6deg); color: #D4C7FF;">✨</span>
+            </h1>
+            <p style="font-size: 1.2em; margin-top: -10px;">Magic untuk Analisis Ruangan Bersih vs Berantakan!</p>
+        </div>
     """, unsafe_allow_html=True)
-
-
-col_main_input, col_main_results = st.columns([1, 2])
-
-with col_main_input:
-    st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">1. Payload Acquisition</h2>', unsafe_allow_html=True)
-
+    
+    st.markdown("---")
+    
+    # File Uploader
     uploaded_file = st.file_uploader(
-        "Upload Image File (JPG/PNG) | Initiating Payload Protocol", 
-        type=["jpg", "jpeg", "png"],
-        key="uploader",
-        help="Unggah file gambar ruangan untuk dianalisis."
+        "Drop foto ruanganmu di sini atau klik untuk upload! (Max 5MB, JPG/PNG)",
+        type=["jpg", "jpeg", "png"]
     )
-    st.session_state.uploaded_file = uploaded_file
 
-    st.markdown('</div>', unsafe_allow_html=True) 
-
-    st.markdown('<div style="padding-top: 20px;">', unsafe_allow_html=True)
-    
-    button_disabled = st.session_state.uploaded_file is None or not ML_LIBRARIES_LOADED
-    
-    if st.button("⚡ INITIATE DUAL-MODEL ANALYSIS", disabled=button_disabled, use_container_width=True):
-        run_ml_analysis() 
+    if uploaded_file is not None:
+        # Memuat gambar
+        image = Image.open(uploaded_file).convert('RGB') # Pastikan format RGB untuk CNN
         
-    st.markdown('</div>', unsafe_allow_html=True)
-    
-    # CONFIDENCE METRICS (Pindahkan ke Input Column)
-    results = st.session_state.analysis_results
-    if results:
-        st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 18px; margin-top: 20px;">Confidence Score (CNN)</h3>', unsafe_allow_html=True)
-        col_conf_clean, col_conf_messy = st.columns(2)
+        # Tampilkan gambar yang diunggah
+        st.subheader("📸 Ruanganmu")
+        st.image(image, caption='Gambar yang Diunggah', use_column_width=True)
 
-        with col_conf_clean:
-            st.markdown(f"""
-                <div class="status-metric-card" style="border-color: {NEON_CYAN}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_CYAN};">
-                    <p style="color: {NEON_CYAN}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CLEAN</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 24px; font-weight: bold;">{results["conf_clean"]}%</p>
-                </div>
-                """, unsafe_allow_html=True)
+        st.markdown('<div class="ciwii-box">', unsafe_allow_html=True)
+        st.subheader("🧠 AI Sedang Berpikir...")
         
-        with col_conf_messy:
-            st.markdown(f"""
-                <div class="status-metric-card" style="border-color: {NEON_MAGENTA}; background-color: {CARD_BG}; box-shadow: 0 0 8px {NEON_MAGENTA};">
-                    <p style="color: {NEON_MAGENTA}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">MESSY</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 24px; font-weight: bold;">{results["conf_messy"]}%</p>
-                </div>
-                """, unsafe_allow_html=True)
+        # Tombol Analisis
+        if st.button("✨ Mulai Analisis Ciwii!"):
+            st.session_state['analysis_done'] = False
+            with st.spinner("Memproses dengan Dual Model (YOLO dan CNN)..."):
+                
+                # 1. Deteksi Objek (YOLO)
+                # Model YOLO
+                yolo_results = run_yolo_detection(image, yolo_model)
+                
+                # 2. Klasifikasi Gambar (CNN)
+                cnn_category, confidence_str = run_cnn_classification(image, cnn_model)
+                
+                # 3. Gabungkan Hasil
+                final_category, messy_count = combine_results(yolo_results, cnn_category)
 
-with col_main_results:
-    st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">2. Visualization & Final Status</h2>', unsafe_allow_html=True)
-    
-    border_class = ""
-    status_text = "Awaiting Image Payload"
-    status_color = ACCENT_PRIMARY_NEON
-    
-    if st.session_state.analysis_results is not None:
-        results = st.session_state.analysis_results
-        border_class = 'clean-border-visual' if results['is_clean'] else 'messy-border-visual'
-        status_main_text = results['final_status'].split(': ')[1].split('(')[0].strip() # Ambil status pendek
-        css_class_status = 'clean-status-text' if results['is_clean'] else 'messy-status-text'
-        status_text = f'FINAL STATUS: <span class="{css_class_status}">{status_main_text}</span>'
+                # Simpan hasil di session state untuk ditampilkan
+                st.session_state['yolo_results'] = yolo_results
+                st.session_state['cnn_category'] = cnn_category
+                st.session_state['confidence'] = confidence_str
+                st.session_state['final_category'] = final_category
+                st.session_state['messy_count'] = messy_count
+                st.session_state['analysis_done'] = True
+                
+        st.markdown('</div>', unsafe_allow_html=True)
+
+
+    # Tampilkan Hasil Analisis
+    if st.session_state.get('analysis_done', False):
+        yolo_results = st.session_state['yolo_results']
+        cnn_category = st.session_state['cnn_category']
+        confidence_str = st.session_state['confidence']
+        final_category = st.session_state['final_category']
+        messy_count = st.session_state['messy_count']
+
+        st.markdown("---")
+        st.markdown('<div class="ciwii-box">', unsafe_allow_html=True)
+
+        # --- Hasil Deteksi Objek (YOLO) ---
+        st.markdown("<h3>🔎 Deteksi Objek YOLO (dari .pt)</h3>", unsafe_allow_html=True)
         
-        # Display Final Status Box
-        final_message_display = results['final_message'].split(': ')[0] + results['final_message'].split(': ')[1]
+        chips_html = ""
+        for item in yolo_results:
+            is_messy = item in MESSY_CLASSES
+            chip_class = "ciwii-chip-messy" if is_messy else "ciwii-chip-clean"
+            icon = "⚠️" if is_messy else "✨"
+            chips_html += f'<span class="{chip_class}">{icon} {item}</span>'
+            
+        st.markdown(f'<div style="display: flex; flex-wrap: wrap;">{chips_html}</div>', unsafe_allow_html=True)
+        
+        st.markdown("---")
+        
+        # --- Hasil Klasifikasi Ruangan (CNN) & Rekomendasi ---
+        
+        if final_category == "Clean":
+            emoji = "👑"
+            category_text = "Ruangan Bersih Sempurna"
+            recommendation = f"Pertahankan kebersihannya! Ruanganmu mencerminkan kedamaian. Ditemukan {messy_count} item yang sedikit berantakan. Sekarang, tambahkan satu barang baru yang lucu!"
+            box_style = "background-color: #C7FFD1; border: 4px solid #52436D; border-radius: 20px; padding: 20px; box-shadow: 6px 6px 0px 0px #FFC7D4;"
+        else:
+            emoji = "🚨"
+            category_text = "Ruangan Berantakan Parah"
+            recommendation = f"Yuk, mari kita mulai beres-beres! Ditemukan {messy_count} item berantakan (seperti yang ditunjukkan di atas). Fokus pada 5 barang teratas yang terdeteksi. Kamu pasti bisa!"
+            box_style = "background-color: #FFC7D4; border: 4px solid #52436D; border-radius: 20px; padding: 20px; box-shadow: 6px 6px 0px 0px #C7FFD1;"
+
         
         st.markdown(f"""
-            <div class="status-metric-card" style="margin-top: -10px; border-color: {'#00FFFF' if results['is_clean'] else '#FF073A'};">
-                <p style="color: {TEXT_LIGHT}; font-size: 14px; margin-bottom: 5px; font-weight: bold;">{final_message_display}</p>
-                <p style="margin: 0;">{status_text}</p>
+            <div style="{box_style}">
+                <h3 style="font-size: 2em; font-weight: 800; color: #52436D; text-shadow: none;">
+                    {emoji} Kategori: {category_text}
+                </h3>
+                <p style="font-size: 1.1em; margin-top: 10px; font-weight: 600;">Confidence: {confidence_str} (dari CNN)</p>
+                
+                <h4 style="margin-top: 20px; font-size: 1.3em; font-weight: 700; color: #52436D; text-shadow: none;">
+                    🌟 Tips Ciwii Beres-Beres!
+                </h4>
+                <p>{recommendation}</p>
             </div>
-            """, unsafe_allow_html=True)
-        
-    elif st.session_state.uploaded_file:
-        status_text = "Image Loaded. Click Initiate Analysis."
-        
-    st.markdown(f"""
-        <div style="border: 2px solid #34495E; border-radius: 10px; padding: 5px; background-color: {BG_DARK};" class="{border_class}">
         """, unsafe_allow_html=True)
 
-    if st.session_state.uploaded_file:
-        if st.session_state.processed_image:
-            st.image(st.session_state.processed_image, caption='VISUALIZATION: Live Detection Grid (YOLO v8 Output)', use_container_width=True)
-        else:
-            image_data = st.session_state.uploaded_file.getvalue()
-            st.image(image_data, caption='Image Data Stream (Original) - Click Analysis to Process', use_container_width=True)
-    else:
-        st.image("https://placehold.co/1200x675/121212/39FF14?text=UPLOAD+IMAGE+TO+ACTIVATE+SCANNER+MODULE", caption="Awaiting Image Payload", use_container_width=True)
-
-    st.markdown('</div>', unsafe_allow_html=True)
-    st.markdown('</div>', unsafe_allow_html=True)
+        st.markdown('</div>', unsafe_allow_html=True)
 
 
-# --- FITUR BARU: Quick Action Terminal ---
-st.markdown(f"<hr style='border-top: 1px solid {ACCENT_PRIMARY_NEON}; box-shadow: 0 0 5px {ACCENT_PRIMARY_NEON}; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
-st.markdown('<div class="modern-card">', unsafe_allow_html=True)
-st.markdown(f'<h2 style="color: {ACCENT_PRIMARY_NEON};">3. Quick Action Terminal (Rekomendasi)</h2>', unsafe_allow_html=True)
-
-if st.session_state.analysis_results:
-    results = st.session_state.analysis_results
-    st.markdown(get_advice(results['is_clean'], results['yolo_status_label']), unsafe_allow_html=True)
-else:
-    st.info("Saran pembersihan akan ditampilkan di sini setelah analisis selesai.")
-    
-st.markdown('</div>', unsafe_allow_html=True)
-    
-# --- TAMPILAN 4: EXECUTION LOG & DETAILED TABLE (Sebagai Detail Lanjutan) ---
-st.markdown(f"<hr style='border-top: 1px dashed #333333; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True)
-
-col_log, col_table = st.columns(2)
-
-with col_log:
-    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; border-bottom: 1px solid #333333; padding-bottom: 5px;">Execution Log</h3>', unsafe_allow_html=True)
-    
-    log_content = ""
-    if st.session_state.analysis_results:
-        log_content = st.session_state.execution_log_data
-    else:
-        log_content = f"""[{time.strftime('%H:%M:%S')}] INFO: System Initialized. Awaiting Input Payload.<br>
-[{time.strftime('%H:%M:%S')}] MODEL: Dual-Model System Idle. ({'ML Libraries NOT loaded' if not ML_LIBRARIES_LOADED else 'ML Libraries loaded'})"""
-
-    st.markdown(f"""
-        <div class="log-container">
-            {log_content}
-        </div>
-        """, unsafe_allow_html=True)
-
-with col_table:
-    st.markdown(f'<h3 style="color: {ACCENT_PRIMARY_NEON}; font-size: 20px; border-bottom: 1px solid #333333; padding-bottom: 5px;">Detected Asset Detail (YOLO)</h3>', unsafe_allow_html=True)
-
-    if st.session_state.analysis_results and st.session_state.analysis_results['detections']:
-        df = pd.DataFrame(st.session_state.analysis_results['detections'])
-        df = df[df['asset_id'] != 'NO-DETECTION'] # Filter out no detection
-        df = df.rename(columns={
-            'asset_id': 'Area Utama Deteksi', 
-            'confidence_score': 'Conf. Deteksi (%)', 
-            'classification_tag': 'Tag Kerapihan',
-            'normalized_coordinates': 'Koordinat Norm.'
-        })
-        df['Conf. Deteksi (%)'] = (df['Conf. Deteksi (%)'] * 100).round(2).astype(str) + '%'
+# Jalankan fungsi utama
+if __name__ == '__main__':
+    # Inisialisasi session state
+    if 'analysis_done' not in st.session_state:
+        st.session_state['analysis_done'] = False
         
-        st.dataframe(
-            df, 
-            use_container_width=True,
-            height=140 
-        )
+    main()
 
-    else:
-        st.info("Tabel aset akan muncul di sini. (Saat ini, tidak ada deteksi area utama yang ditemukan).")
+# Footer
+st.markdown("""
+<div style="text-align: center; margin-top: 50px; padding-top: 20px; color: #52436D80; font-size: 0.8em;">
+    <p>Dibangun menggunakan Streamlit. Memuat model `Siti Naura Khalisa_Laporan 4.pt` (YOLO) dan `SitiNauraKhalisa_Laporan2.h5` (CNN).</p>
+</div>
+""", unsafe_allow_html=True)
