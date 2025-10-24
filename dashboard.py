@@ -524,9 +524,9 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
             "color": ACCENT_NEON_CYAN,
             "content": f"""
                 Selamat! Ruangan Anda menunjukkan tingkat kerapihan yang luar biasa. 
-                Sistem kami mendeteksi sedikit atau tidak ada ASET TIDAK OPTIMAL (jumlah: {messy_count})
+                Sistem kami mendeteksi sedikit atau tidak ada ASET TIDAK OPTIMAL
                 Tips Maintenance:
-                Pastikan setiap barang memiliki tempatnya yang spesifik. Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.</li>
+                Pastikan setiap barang memiliki tempatnya yang spesifik. Jika ini ruang kerja, pertimbangkan untuk merapikan file digital secara berkala, seperti yang Anda lakukan pada aset fisik.
                 Lakukan audit kerapihan cepat 5 menit setiap hari untuk mencegah penumpukan.
             """
         }
@@ -541,14 +541,11 @@ def get_tips_and_appreciation(is_clean, messy_count, is_overridden):
             "icon": "🧹",
             "color": ACCENT_PINK_MESSY,
             "content": f"""
-                {override_note}
-                <p>Ruangan Anda teridentifikasi sebagai <b>TIDAK OPTIMAL / BERANTAKAN</b>. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi <b>{messy_count} item TIDAK OPTIMAL</b>.</p>
-                <p><b>Rekomendasi Tindakan (De-Clutter Protocol):</b></p>
-                <ul>
-                    <li>Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti **Pakaian Berserakan** atau **Kertas Tidak Teratur**).</li>
-                    <li>Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.</li>
-                    <li>Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.</li>
-                </ul>
+             Ruangan Anda teridentifikasi sebagai TIDAK OPTIMAL. Ini menunjukkan adanya aset-aset yang perlu dikelola ulang. Model Deteksi kami mengidentifikasi item TIDAK OPTIMAL.
+             Rekomendasi Tindakan :
+             Fokus pada Aset Berisiko: Prioritaskan merapikan item yang terdeteksi (seperti Pakaian Berserakan atau Kertas Tidak Teratur).
+             Prinsip 4 Kotak: Gunakan 4 kotak: Sampah, Donasi, Simpan (jauh), dan Simpan (di sini). Segera distribusikan aset berdasarkan kategori ini.
+             Re-Scan: Setelah merapikan, muat ulang gambar ruangan Anda dan jalankan analisis kembali untuk memverifikasi Status Optimal.
             """
         }
 
