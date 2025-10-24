@@ -65,17 +65,53 @@ st.markdown("""
 
 # --- Simulasi Data Model (Inti Logika) ---
 
-# Simulasi Inferensi untuk Klasifikasi Ruangan (Messy/Clean) - Model .h5
-def simulate_classification_inference(file_name):
-    """Mensimulasikan output klasifikasi Clean Room / Messy Room."""
-    # Menghitung Chaos Index dan Tidy Quotient (Metrik Kreatif)
-    if 'rapi' in file_name.lower() or 'bersih' in file_name.lower():
-        tidy_quotient = np.random.randint(85, 99)
-    elif 'berantakan' in file_name.lower() or 'kotor' in file_name.lower() or 'messy' in file_name.lower():
-        tidy_quotient = np.random.randint(10, 35)
-    else:
-        tidy_quotient = np.random.randint(40, 75)
+# Simulasi Inferensi untuk Deteksi Objek (YOLO) - Model .pt
+def simulate_detection_inference(file_name):
+    """Mensimulasikan output deteksi objek dan menghitung metrik kekacauan."""
     
+    # LOGIKA SIMULASI DISINI DIBUAT JAUH LEBIH KONSERVATIF
+    if 'rapi' in file_name.lower() or 'bersih' in file_name.lower():
+        misplaced_items = np.random.randint(1, 4)
+        clothing_count = np.random.randint(0, 2)
+        
+    elif 'berantakan' in file_name.lower() or 'kotor' in file_name.lower() or 'messy' in file_name.lower():
+        misplaced_items = np.random.randint(15, 30)
+        clothing_count = np.random.randint(8, 20)
+        
+    else:
+        # KONDISI DEFAULT/NAMA FILE ACAK (seperti image_2b7b3d.jpg)
+        # Kami asumsikan gambar yang diunggah secara default cenderung memiliki kekacauan moderat-tinggi
+        misplaced_items = np.random.randint(10, 25) # Lebih banyak item berantakan
+        clothing_count = np.random.randint(5, 15)
+        
+
+    # Data simulasi deteksi dengan bounding box sederhana (hanya metrik)
+    return {
+        "misplaced_items": int(misplaced_items),
+        "clothing_count": int(clothing_count),
+        "book_piles": np.random.randint(0, 3)
+    }
+
+# Simulasi Inferensi untuk Klasifikasi Ruangan (Messy/Clean) - Model .h5
+def simulate_classification_inference(detection_data):
+    """Mensimulasikan output klasifikasi Clean Room / Messy Room berdasarkan hasil deteksi."""
+    
+    # Kami akan menggunakan hasil deteksi untuk menghitung Tidy Quotient (Metrik Kreatif)
+    
+    total_clutter = detection_data['misplaced_items'] + detection_data['clothing_count'] * 2 + detection_data['book_piles'] * 3
+    
+    # Normalisasi untuk Tidy Quotient (0-100)
+    # Kami asumsikan clutter maksimum ~50 untuk kekacauan parah
+    max_clutter = 50 
+    
+    # Hitung Chaos Index: Semakin tinggi clutter, semakin tinggi Chaos Index
+    chaos_index = min(100, (total_clutter / max_clutter) * 100)
+    
+    # Hitung Tidy Quotient
+    tidy_quotient = 100 - chaos_index
+    
+    # Batasi Tidy Quotient dan Chaos Index antara 0 dan 100
+    tidy_quotient = max(0, min(100, round(tidy_quotient)))
     chaos_index = 100 - tidy_quotient
     
     # Klasifikasi Akhir
@@ -86,32 +122,10 @@ def simulate_classification_inference(file_name):
     else:
         status = "NEUTRAL (Ambang Batas)"
         
-    confidence = tidy_quotient / 100 # Menggunakan Tidy Quotient sebagai Confidence
+    # Confidence dihitung dari seberapa jauh dari ambang batas 50%
+    confidence = max(tidy_quotient, chaos_index) / 100 
     
     return status, confidence, tidy_quotient, chaos_index
-
-# Simulasi Inferensi untuk Deteksi Objek (YOLO) - Model .pt
-def simulate_detection_inference(file_name):
-    """Mensimulasikan output deteksi objek dan menghitung metrik kekacauan."""
-    
-    if 'rapi' in file_name.lower() or 'bersih' in file_name.lower():
-        misplaced_items = np.random.randint(1, 4)
-        clothing_count = np.random.randint(0, 2)
-        
-    elif 'berantakan' in file_name.lower() or 'kotor' in file_name.lower() or 'messy' in file_name.lower():
-        misplaced_items = np.random.randint(15, 30)
-        clothing_count = np.random.randint(8, 20)
-        
-    else:
-        misplaced_items = np.random.randint(5, 15)
-        clothing_count = np.random.randint(3, 8)
-
-    # Data simulasi deteksi dengan bounding box sederhana (hanya metrik)
-    return {
-        "misplaced_items": int(misplaced_items),
-        "clothing_count": int(clothing_count),
-        "book_piles": np.random.randint(0, 3)
-    }
 
 # --- Fungsi Utility untuk Visualisasi Simulasi Bounding Box ---
 
@@ -129,6 +143,10 @@ def draw_simulated_detection(image_bytes, detection_data):
 
 # --- MODUL DETEKSI OBJEK (Menu 1) ---
 def detection_page(uploaded_file):
+    # Menyimpan hasil deteksi di session state agar bisa diakses oleh klasifikasi
+    if 'detection_results' not in st.session_state:
+        st.session_state['detection_results'] = None
+        
     st.title("🔎 Modul Deteksi Objek (Model YOLO)")
     st.markdown("Identifikasi objek individual (pakaian, buku, sampah) dan hitung metrik kekacauan.")
 
@@ -138,6 +156,7 @@ def detection_page(uploaded_file):
         
         # Jalankan Simulasi Deteksi
         detection_results = simulate_detection_inference(uploaded_file.name)
+        st.session_state['detection_results'] = detection_results # Simpan ke state
         
         col_img, col_metrics = st.columns([2, 1])
 
@@ -145,7 +164,7 @@ def detection_page(uploaded_file):
             image_bytes = uploaded_file.read()
             # Tampilkan gambar hasil deteksi simulasi
             simulated_img = draw_simulated_detection(image_bytes, detection_results)
-            st.image(simulated_img, caption="Hasil Deteksi Objek (Simulasi Bounding Box)", use_column_width=True)
+            st.image(simulated_img, caption="Hasil Deteksi Objek (Simulasi Bounding Box)", use_container_width=True)
             uploaded_file.seek(0) # Reset pointer file
         
         with col_metrics:
@@ -181,12 +200,23 @@ def classification_page(uploaded_file):
     st.title("⭐ Modul Klasifikasi Gambar (Model Keras)")
     st.markdown("Klasifikasi akhir ruangan: **CLEAN ROOM** atau **MESSY ROOM**.")
 
+    # Pastikan hasil deteksi sudah ada
+    if 'detection_results' in st.session_state and st.session_state['detection_results'] is not None:
+        detection_data = st.session_state['detection_results']
+    elif uploaded_file is not None:
+        # Jika file diunggah di sini tetapi deteksi belum dijalankan, jalankan simulasi default
+        detection_data = simulate_detection_inference(uploaded_file.name)
+        st.session_state['detection_results'] = detection_data # Simpan ke state
+    else:
+        st.warning("Silakan unggah gambar di sidebar dan jalankan Deteksi Objek terlebih dahulu.")
+        return
+
     if uploaded_file is not None:
         with st.spinner('⏳ Model Keras sedang mengklasifikasi status ruangan...'):
             time.sleep(2)
             
-        # Jalankan Simulasi Klasifikasi
-        status, confidence, tidy_quotient, chaos_index = simulate_classification_inference(uploaded_file.name)
+        # Jalankan Simulasi Klasifikasi menggunakan data deteksi
+        status, confidence, tidy_quotient, chaos_index = simulate_classification_inference(detection_data)
         
         image_bytes = uploaded_file.read()
         uploaded_file.seek(0) # Reset pointer file
@@ -197,7 +227,7 @@ def classification_page(uploaded_file):
             st.image(
                 Image.open(io.BytesIO(image_bytes)), 
                 caption="Gambar Ruangan yang Dianalisis", 
-                use_column_width=True
+                use_container_width=True
             )
 
         with col_result:
@@ -242,9 +272,6 @@ def classification_page(uploaded_file):
                 st.error("❌ Peringatan! Ruangan ini diklasifikasikan sebagai MESSY ROOM.")
             else:
                 st.warning("🔶 Ambang Batas: Diperlukan sedikit usaha untuk mencapai CLEAN ROOM.")
-
-    else:
-        st.warning("Silakan unggah gambar di sidebar untuk memulai klasifikasi.")
 
 # --- MAIN APP LOGIC ---
 
