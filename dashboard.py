@@ -29,8 +29,8 @@ except ImportError as e:
 # -------------------------------------------------------------
 
 # --- Konfigurasi File Model ---
-YOLO_MODEL_PATH = "Siti Naura Khalisa_Laporan 4.pt"
-CLASSIFICATION_MODEL_PATH = "SitiNauraKhalisa_Laporan2.h5"
+YOLO_MODEL_PATH = "model/Siti Naura Khalisa_Laporan 4.pt"
+CLASSIFICATION_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"
 CLASS_LABELS = ['Clean', 'Messy'] # Label untuk klasifikasi
 
 # --- Konfigurasi Halaman Streamlit ---
