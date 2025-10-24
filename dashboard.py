@@ -19,7 +19,7 @@ except ImportError:
     st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
     ML_LIBRARIES_LOADED = False
 
-# --- 2. Konfigurasi dan Styling (Tema A.I. Spatial Audit / Data Grid) ---
+# --- 2. Konfigurasi dan Styling (Tema Soft Light / Muted Green) ---
 
 st.set_page_config(
     page_title="SPATIAL AUDIT",
@@ -27,14 +27,14 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Warna Baru (Deep Blue / Data Grid Theme) ---
-BG_DARK = "#0D1117"             # Deep Navy / Black
-CARD_BG = "#161B22"             # Lighter Card Background
-TEXT_LIGHT = "#D1D4D9"          # Main Text
-ACCENT_BLUE = "#00AEEF"         # Primary Action / Clean Status (Cyan-Blue)
-ALERT_RED = "#F04C4C"           # Messy Status (Red)
-BUTTON_COLOR = "#00AEEF"
-GRID_LINE = "#21262D"           # Subtle separator lines
+# --- Warna Baru (Soft Light / Muted Green Theme) ---
+BG_DARK = "#F5F7F9"              # Soft Light Gray / Off-White (Main Background)
+CARD_BG = "#FFFFFF"              # Pure White Card Background
+TEXT_LIGHT = "#334155"           # Dark Slate Blue / Main Text
+ACCENT_BLUE = "#10B981"          # Muted Emerald Green (Primary Action / Clean Status)
+ALERT_RED = "#EF4444"            # Standard Red (Used for Messy Status)
+BUTTON_COLOR = "#10B981"
+GRID_LINE = "#CBD5E1"            # Light Border Gray
 
 custom_css = f"""
 <style>
@@ -54,15 +54,17 @@ custom_css = f"""
         padding-bottom: 15px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        text-shadow: 0 0 5px rgba(0, 174, 239, 0.3);
+        /* Shadow disesuaikan untuk light mode */
+        text-shadow: 0 0 3px rgba(16, 185, 129, 0.2); 
     }}
     
     /* Card/Module Style */
     .data-module-card {{
         background-color: {CARD_BG};
         border: 1px solid {GRID_LINE};
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
-        border-radius: 4px; /* Squared corners for the 'blueprint' feel */
+        /* Box shadow disesuaikan untuk light mode */
+        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
+        border-radius: 4px;
         padding: 20px;
         margin-bottom: 20px;
     }}
@@ -79,7 +81,7 @@ custom_css = f"""
         margin-top: 10px;
         border: 2px dashed {ACCENT_BLUE} !important; 
         border-radius: 4px;
-        background-color: {CARD_BG} !important;
+        background-color: {BG_DARK} !important; /* Gunakan BG_DARK (soft light gray) */
     }}
     [data-testid="stFileUploaderDropzone"] button {{
         background-color: {CARD_BG} !important;
@@ -93,17 +95,17 @@ custom_css = f"""
     /* Main Action Button Style */
     .stButton > button:nth-child(1) {{
         background-color: {BUTTON_COLOR}; 
-        color: {BG_DARK} !important;
+        color: {CARD_BG} !important; /* Text putih agar kontras dengan hijau */
         font-weight: bold;
         border-radius: 4px;
         border: none;
         padding: 10px 20px;
         transition: all 0.3s;
-        box-shadow: 0 0 15px rgba(0, 174, 239, 0.5);
+        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); /* Shadow disesuaikan */
         text-transform: uppercase;
     }}
     .stButton > button:nth-child(1):hover {{
-        background-color: #008CCD;
+        background-color: #0d946d; /* Darker shade of emerald */
     }}
 
     /* Status and Metric Cards */
@@ -116,12 +118,14 @@ custom_css = f"""
         border: 2px solid;
     }}
     .status-clean {{
-        background-color: rgba(0, 174, 239, 0.1);
+        /* Muted but visible on light background */
+        background-color: rgba(16, 185, 129, 0.1); 
         border-color: {ACCENT_BLUE};
         color: {ACCENT_BLUE};
     }}
     .status-messy {{
-        background-color: rgba(240, 76, 76, 0.1);
+        /* Muted but visible on light background */
+        background-color: rgba(239, 68, 68, 0.1); 
         border-color: {ALERT_RED};
         color: {ALERT_RED};
     }}
@@ -133,10 +137,10 @@ custom_css = f"""
 
     /* Log Console */
     .log-container {{
-        background-color: {BG_DARK}; 
-        color: {TEXT_LIGHT}; 
+        background-color: {CARD_BG}; /* White background */
+        color: {TEXT_LIGHT}; /* Dark text */
         border: 1px solid {GRID_LINE};
-        box-shadow: 0 0 5px rgba(0, 174, 239, 0.2);
+        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
         padding: 15px;
         border-radius: 4px;
         font-family: 'Consolas', 'Monaco', monospace;
@@ -153,8 +157,9 @@ custom_css = f"""
         margin-bottom: 10px;
         padding: 10px;
         border-left: 3px solid {ACCENT_BLUE};
-        background-color: {CARD_BG};
+        background-color: {BG_DARK}; /* Soft light gray background for list items */
         border-radius: 2px;
+        color: {TEXT_LIGHT};
     }}
     
 </style>
@@ -278,7 +283,7 @@ def draw_boxes_on_image(image_bytes, detections):
     # Warna Baru
     CLEAN_RGB = ImageColor.getrgb(ACCENT_BLUE)
     MESSY_RGB = ImageColor.getrgb(ALERT_RED)
-    TEXT_RGB = ImageColor.getrgb(BG_DARK)
+    TEXT_RGB = ImageColor.getrgb(CARD_BG) # Putih/White untuk kontras pada fill box
     
     try:
         # Menggunakan font default PIL, sesuaikan ukuran
@@ -318,6 +323,7 @@ def draw_boxes_on_image(image_bytes, detections):
             text_width = text_bbox[2] - text_bbox[0]
             text_height = text_bbox[3] - text_bbox[1]
         except AttributeError:
+            # Fallback for older PIL versions
             text_width, text_height = draw.textsize(text_content, font=font)
             
         text_x = x_min
@@ -487,8 +493,8 @@ def generate_recommendations(results):
     item_counts = pd.Series(messy_items).value_counts()
     
     if item_counts.empty:
-         # Ini terjadi jika override rule yang memicu 'Messy' tapi YOLO count masih rendah
-         recs.append("Meskipun statusnya ALERT, clutter yang terdeteksi relatif tersebar. Fokus pada penataan ulang barang-barang kecil di permukaan meja.")
+            # Ini terjadi jika override rule yang memicu 'Messy' tapi YOLO count masih rendah
+            recs.append("Meskipun statusnya ALERT, clutter yang terdeteksi relatif tersebar. Fokus pada penataan ulang barang-barang kecil di permukaan meja.")
     else:
         # Rekomendasi berdasarkan item yang terdeteksi
         for item, count in item_counts.head(3).items():
@@ -576,7 +582,10 @@ with col_detection:
             st.image(image_data, caption='VISUALIZATION: Original Image Stream', use_container_width=True)
             
     else:
-        st.image("https://placehold.co/1200x675/161B22/00AEEF?text=UPLOAD+IMAGE+TO+ACTIVATE+AUDIT+SCANNER", caption="Awaiting Input Data Stream", use_container_width=True)
+        # URL Placeholder disesuaikan dengan skema warna baru
+        placeholder_bg = BG_DARK.replace('#', '')
+        placeholder_text = TEXT_LIGHT.replace('#', '')
+        st.image(f"https://placehold.co/1200x675/{placeholder_bg}/{placeholder_text}?text=UPLOAD+IMAGE+TO+ACTIVATE+AUDIT+SCANNER", caption="Awaiting Input Data Stream", use_container_width=True)
 
     st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
@@ -601,11 +610,14 @@ with col_report:
         css_class_status = 'status-clean' if results['is_clean'] else 'status-messy'
         message = results['final_message']
         
+        # Mengubah warna teks pesan menjadi TEXT_LIGHT agar kontras di light mode
+        message_color = TEXT_LIGHT 
+        
         st.markdown(f"""
             <div class="status-box {css_class_status}" style="text-align: left; padding: 20px; border-width: 3px;">
                 <p style="margin: 0; font-size: 14px; font-weight: 500;">REPORT SUMMARY:</p>
                 <p class="status-text-large" style="color: inherit; margin-bottom: 15px;">{status_main_text}</p>
-                <p style="font-size: 13px; color: {TEXT_LIGHT if results['is_clean'] else BG_DARK}; font-weight: 500; opacity: 0.8;">{message}</p>
+                <p style="font-size: 13px; color: {message_color}; font-weight: 500; opacity: 0.8;">{message}</p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -673,7 +685,8 @@ with col_log:
         
         # Highlight Tag Kerapihan
         def highlight_messy(val):
-            color = f'background-color: rgba(240, 76, 76, 0.2); color: {ALERT_RED}; font-weight: bold;' if val == 'UNOPTIMIZED' else f'color: {ACCENT_BLUE};'
+            # Menggunakan warna teks ALERT_RED di background yang sangat tipis untuk light mode
+            color = f'background-color: rgba(239, 68, 68, 0.1); color: {ALERT_RED}; font-weight: bold;' if val == 'UNOPTIMIZED' else f'color: {ACCENT_BLUE};'
             return color
             
         st.dataframe(
