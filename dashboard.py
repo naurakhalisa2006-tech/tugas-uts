@@ -187,7 +187,7 @@ def load_ml_model():
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "model/Siti_Naura_Khalisa_Laporan_4.pt"
+        YOLO_MODEL_PATH = "model/Siti Naura Khalisa_Laporan_4.pt"
         CNN_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"
 
         # Model 1: Deteksi Objek (YOLOv8)
