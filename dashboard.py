@@ -53,10 +53,23 @@ custom_css = f"""
         }}
     }}
 
-    /* --- ANIMASI JUDUL BARU --- */
+    /* --- ANIMASI JUDUL BARU (Lebih Besar dan Glowing Fading) --- */
     @keyframes neon-glow {{
-        from {{ text-shadow: 0 0 5px {ACCENT_PURPLE}, 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PURPLE}; }}
-        to {{ text-shadow: 0 0 8px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PURPLE}, 0 0 20px {ACCENT_PRIMARY_PINK}; }}
+        0% {{ 
+            color: {TEXT_DARK}; /* Warna dasar gelap */
+            text-shadow: 0 0 7px {ACCENT_PURPLE}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG}; /* Pink, Purple, White/Light */
+            opacity: 0.85; 
+        }}
+        50% {{ 
+            color: {ACCENT_PRIMARY_PINK}; /* Warna tengah menjadi pink cerah */
+            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PURPLE}, 0 0 40px {CARD_BG}; /* Lebih cerah di tengah */
+            opacity: 1; 
+        }}
+        100% {{ 
+            color: {TEXT_DARK}; /* Kembali ke warna dasar gelap */
+            text-shadow: 0 0 7px {ACCENT_PURPLE}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG}; /* Pink, Purple, White/Light */
+            opacity: 0.85; 
+        }}
     }}
 
     @keyframes glitch {{
@@ -70,15 +83,15 @@ custom_css = f"""
 
     .main-title {{
         color: {TEXT_DARK}; /* Warna dasar gelap */
-        font-size: 5rem;
+        font-size: 6rem; /* UKURAN LEBIH BESAR SESUAI PERMINTAAN */
         font-weight: 900;
         letter-spacing: 5px;
         text-transform: uppercase;
         margin-bottom: 0px;
         position: relative;
         text-align: center;
-        /* Animasi Neon Glow */
-        animation: neon-glow 1.5s ease-in-out infinite alternate;
+        /* Animasi Neon Glow - lebih fokus ke pulsing glow */
+        animation: neon-glow 2s ease-in-out infinite alternate; /* Durasi 2s untuk denyutan yang lebih halus */
         transition: color 0.3s;
     }}
 
