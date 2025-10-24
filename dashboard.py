@@ -40,7 +40,7 @@ TEXT_MESSY_STATUS = ACCENT_PINK_MESSY
 
 custom_css = f"""
 <style>
-    /* Definisi Keyframe untuk Efek Soft Glow */
+    /* Definisi Keyframe untuk Efek Soft Glow di Tombol */
     @keyframes soft-glow {{
         0% {{
             box-shadow: 0 0 5px {ACCENT_PRIMARY_PINK}, 0 0 10px {ACCENT_PRIMARY_PINK};
@@ -53,25 +53,23 @@ custom_css = f"""
         }}
     }}
 
-    /* --- ANIMASI JUDUL BARU (Lebih Besar dan Glowing Fading) --- */
-    @keyframes neon-glow {{
-        0% {{ 
-            color: {TEXT_DARK}; /* Warna dasar gelap */
-            text-shadow: 0 0 7px {ACCENT_PURPLE}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG}; /* Pink, Purple, White/Light */
-            opacity: 0.85; 
+    /* --- KEYFRAME BARU: SOFT CORAL PINK & WHITE GLOW (Sesuai Permintaan) --- */
+    @keyframes soft-coral-glow {{
+        0%, 100% {{
+            /* Soft Coral Pink shadow + very faint white background glow */
+            text-shadow: 0 0 7px {ACCENT_PRIMARY_PINK}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG};
+            color: {TEXT_DARK};
+            opacity: 0.9;
         }}
-        50% {{ 
-            color: {ACCENT_PRIMARY_PINK}; /* Warna tengah menjadi pink cerah */
-            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PURPLE}, 0 0 40px {CARD_BG}; /* Lebih cerah di tengah */
-            opacity: 1; 
-        }}
-        100% {{ 
-            color: {TEXT_DARK}; /* Kembali ke warna dasar gelap */
-            text-shadow: 0 0 7px {ACCENT_PURPLE}, 0 0 15px {ACCENT_PRIMARY_PINK}, 0 0 25px {CARD_BG}; /* Pink, Purple, White/Light */
-            opacity: 0.85; 
+        50% {{
+            /* Brighter glow at midpoint, color pulses to the pink accent */
+            text-shadow: 0 0 10px {ACCENT_PRIMARY_PINK}, 0 0 25px {ACCENT_PRIMARY_PINK}, 0 0 40px {CARD_BG};
+            color: {ACCENT_PRIMARY_PINK}; 
+            opacity: 1;
         }}
     }}
 
+    /* Keyframe Glitch untuk Efek Hover */
     @keyframes glitch {{
         0% {{ transform: translate(0); }}
         20% {{ transform: translate(-2px, 2px); opacity: 0.9; }}
@@ -81,17 +79,18 @@ custom_css = f"""
         100% {{ transform: translate(0); }}
     }}
 
+    /* --- PERUBAHAN UTAMA DI SINI --- */
     .main-title {{
-        color: {TEXT_DARK}; /* Warna dasar gelap */
-        font-size: 50rem; /* UKURAN LEBIH BESAR SESUAI PERMINTAAN */
+        color: {TEXT_DARK}; 
+        font-size: 5rem; /* UKURAN DIPERBESAR DAN DIKOREKSI (50rem terlalu besar) */
         font-weight: 900;
         letter-spacing: 5px;
         text-transform: uppercase;
         margin-bottom: 0px;
         position: relative;
         text-align: center;
-        /* Animasi Neon Glow - lebih fokus ke pulsing glow */
-        animation: neon-glow 2s ease-in-out infinite alternate; /* Durasi 2s untuk denyutan yang lebih halus */
+        /* Menggunakan animasi SOFT CORAL GLOW BARU */
+        animation: soft-coral-glow 2s ease-in-out infinite alternate;
         transition: color 0.3s;
     }}
 
@@ -102,7 +101,7 @@ custom_css = f"""
     
     .subtitle-center {{
         color: {ACCENT_PRIMARY_PINK};
-        font-size: 1.2rem;
+        font-size: 1.2rem; /* UKURAN SUBTITLE TETAP KECIL */
         margin-top: 5px;
         text-align: center;
         font-weight: 600;
