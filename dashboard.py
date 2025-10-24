@@ -19,7 +19,7 @@ except ImportError:
     st.error("GAGAL PENTING: Pustaka 'ultralytics' atau 'tensorflow' tidak ditemukan. Analisis ML TIDAK DAPAT DILANJUTKAN.")
     ML_LIBRARIES_LOADED = False
 
-# --- 2. Konfigurasi dan Styling (Tema Soft Light / Muted Green) ---
+# --- 2. Konfigurasi dan Styling (Tema Soft Light / Muted Green YANG LEBIH DINAMIS) ---
 
 st.set_page_config(
     page_title="SPATIAL AUDIT",
@@ -27,141 +27,177 @@ st.set_page_config(
     initial_sidebar_state="collapsed"
 )
 
-# --- Warna Baru (Soft Light / Muted Green Theme) ---
+# --- Warna Baru (Soft Light / Muted Green Theme - Updated) ---
 BG_DARK = "#F5F7F9"              # Soft Light Gray / Off-White (Main Background)
 CARD_BG = "#FFFFFF"              # Pure White Card Background
-TEXT_LIGHT = "#334155"           # Dark Slate Blue / Main Text
-ACCENT_BLUE = "#10B981"          # Muted Emerald Green (Primary Action / Clean Status)
+TEXT_DARK = "#1F2937"            # Darker Slate Blue / Near-Black (Main Text)
+ACCENT_GREEN = "#10B981"         # Muted Emerald Green (Primary Action / Clean Status)
+SECONDARY_LIGHT = "#E0F2F1"      # Very light Teal/Mint for subtle section background
 ALERT_RED = "#EF4444"            # Standard Red (Used for Messy Status)
-BUTTON_COLOR = "#10B981"
-GRID_LINE = "#CBD5E1"            # Light Border Gray
+GRID_LINE = "#CBD5E1"            # Light Border Gray (Subtle separator)
 
 custom_css = f"""
 <style>
     /* Global Styles */
     .stApp {{
         background-color: {BG_DARK};
-        color: {TEXT_LIGHT};
+        color: {TEXT_DARK};
         font-family: 'Inter', sans-serif;
     }}
     h1, h2, h3, h4 {{
-        color: {TEXT_LIGHT};
-        font-weight: 600;
+        color: {TEXT_DARK};
+        font-weight: 700; /* Lebih tebal untuk hierarki */
     }}
+    
+    /* Main Header - Lebih Dinamis */
     h1 {{
-        color: {ACCENT_BLUE};
-        border-bottom: 3px solid {GRID_LINE};
-        padding-bottom: 15px;
+        color: {ACCENT_GREEN};
+        border-bottom: 3px solid {ACCENT_GREEN}; /* Border aksen */
+        padding-bottom: 10px;
         letter-spacing: 2px;
         text-transform: uppercase;
-        /* Shadow disesuaikan untuk light mode */
-        text-shadow: 0 0 3px rgba(16, 185, 129, 0.2); 
+        font-size: 2.5em;
+        text-shadow: 2px 2px 5px rgba(16, 185, 129, 0.2); 
     }}
     
-    /* Card/Module Style */
+    /* Section Headers - Lebih halus */
+    .data-module-card h2 {{
+        color: {TEXT_DARK};
+        font-weight: 700;
+        border-bottom: 2px dashed {SECONDARY_LIGHT}; /* Border yang lebih lembut */
+        padding-bottom: 8px;
+        margin-bottom: 15px;
+    }}
+    .data-module-card h2 span {{
+        color: {ACCENT_GREEN};
+        font-size: 1.1em;
+        margin-right: 5px;
+    }}
+    
+    /* Card/Module Style - Lebih Rounded & Angkat */
     .data-module-card {{
         background-color: {CARD_BG};
-        border: 1px solid {GRID_LINE};
-        /* Box shadow disesuaikan untuk light mode */
-        box-shadow: 0 2px 10px rgba(0, 0, 0, 0.05); 
-        border-radius: 4px;
-        padding: 20px;
-        margin-bottom: 20px;
-    }}
-    .data-module-card h2 {{
-        color: {ACCENT_BLUE};
-        border-bottom: 1px dashed {GRID_LINE};
-        padding-bottom: 10px;
+        border: none;
+        box-shadow: 0 4px 15px rgba(0, 0, 0, 0.08); /* Shadow yang lebih dalam dan bersih */
+        border-radius: 10px; /* Sudut lebih membulat */
+        padding: 25px;
+        margin-bottom: 25px;
     }}
     
-    /* File Uploader Style */
+    /* File Uploader Style - Lebih menonjol */
     [data-testid="stFileUploader"] {{
-        min-height: 180px; 
-        padding: 10px 20px 10px 20px !important;
-        margin-top: 10px;
-        border: 2px dashed {ACCENT_BLUE} !important; 
-        border-radius: 4px;
-        background-color: {BG_DARK} !important; /* Gunakan BG_DARK (soft light gray) */
+        min-height: 200px; 
+        padding: 20px !important;
+        margin-top: 15px;
+        border: 3px dashed {ACCENT_GREEN} !important; 
+        border-radius: 10px;
+        background-color: {SECONDARY_LIGHT} !important; /* Gunakan warna sekunder */
     }}
     [data-testid="stFileUploaderDropzone"] button {{
         background-color: {CARD_BG} !important;
-        color: {ACCENT_BLUE} !important;
+        color: {ACCENT_GREEN} !important;
         font-weight: bold !important;
-        border: 1px solid {ACCENT_BLUE} !important;
-        border-radius: 4px !important;
+        border: 1px solid {ACCENT_GREEN} !important;
+        border-radius: 8px !important;
         transition: all 0.3s !important;
+        box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
     }}
 
-    /* Main Action Button Style */
+    /* Main Action Button Style - Lebih Bold */
     .stButton > button:nth-child(1) {{
-        background-color: {BUTTON_COLOR}; 
-        color: {CARD_BG} !important; /* Text putih agar kontras dengan hijau */
-        font-weight: bold;
-        border-radius: 4px;
+        background-color: {ACCENT_GREEN}; 
+        color: {CARD_BG} !important;
+        font-weight: 800; /* Extra bold */
+        border-radius: 8px;
         border: none;
-        padding: 10px 20px;
+        padding: 12px 25px;
         transition: all 0.3s;
-        box-shadow: 0 0 10px rgba(16, 185, 129, 0.4); /* Shadow disesuaikan */
+        box-shadow: 0 5px 15px rgba(16, 185, 129, 0.4); 
         text-transform: uppercase;
     }}
     .stButton > button:nth-child(1):hover {{
-        background-color: #0d946d; /* Darker shade of emerald */
+        background-color: #0d946d; 
+        transform: translateY(-2px); /* Efek hover */
+        box-shadow: 0 8px 20px rgba(16, 185, 129, 0.6);
     }}
 
-    /* Status and Metric Cards */
+    /* Status and Metric Cards - Lebih Jelas */
     .status-box {{
-        padding: 15px 20px;
-        border-radius: 4px;
-        font-weight: bold;
+        padding: 20px 25px;
+        border-radius: 8px; /* Sudut lebih membulat */
+        font-weight: 600;
         margin-top: 10px;
         text-align: center;
         border: 2px solid;
+        transition: all 0.3s;
     }}
     .status-clean {{
-        /* Muted but visible on light background */
         background-color: rgba(16, 185, 129, 0.1); 
-        border-color: {ACCENT_BLUE};
-        color: {ACCENT_BLUE};
+        border-color: {ACCENT_GREEN};
+        color: {ACCENT_GREEN};
     }}
     .status-messy {{
-        /* Muted but visible on light background */
         background-color: rgba(239, 68, 68, 0.1); 
         border-color: {ALERT_RED};
         color: {ALERT_RED};
     }}
     .status-text-large {{
-        font-size: 32px;
-        font-weight: 800;
+        font-size: 38px; /* Lebih besar */
+        font-weight: 900;
         margin: 5px 0;
+        letter-spacing: -1px;
     }}
 
-    /* Log Console */
+    /* Log Console - Lebih Elegan */
     .log-container {{
-        background-color: {CARD_BG}; /* White background */
-        color: {TEXT_LIGHT}; /* Dark text */
-        border: 1px solid {GRID_LINE};
-        box-shadow: 0 0 5px rgba(0, 0, 0, 0.1); /* Subtle shadow */
+        background-color: {TEXT_DARK}; /* Background gelap untuk log */
+        color: #FFFFFF; /* Teks putih untuk kontras */
+        border: 1px solid {ACCENT_GREEN}; /* Border aksen hijau */
+        box-shadow: 0 0 10px rgba(0, 0, 0, 0.2); 
         padding: 15px;
-        border-radius: 4px;
+        border-radius: 8px;
         font-family: 'Consolas', 'Monaco', monospace;
-        font-size: 13px;
-        height: 140px;
+        font-size: 12px;
+        height: 160px; /* Sedikit lebih tinggi */
         overflow-y: auto;
     }}
-    /* Recommendations */
+    /* Recommendations - Menggunakan aksen yang lebih menonjol */
     .recommendation-list {{
         list-style-type: none;
         padding-left: 0;
     }}
     .recommendation-list li {{
-        margin-bottom: 10px;
-        padding: 10px;
-        border-left: 3px solid {ACCENT_BLUE};
-        background-color: {BG_DARK}; /* Soft light gray background for list items */
-        border-radius: 2px;
-        color: {TEXT_LIGHT};
+        margin-bottom: 12px;
+        padding: 15px;
+        border-left: 5px solid {ACCENT_GREEN}; /* Border kiri yang tebal */
+        background-color: {SECONDARY_LIGHT}; /* Soft secondary background */
+        border-radius: 5px;
+        color: {TEXT_DARK};
+        font-weight: 500;
+        box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+    }}
+    .recommendation-list li strong {{
+        color: #0d946d; /* Darker green for bold text inside recs */
     }}
     
+    /* Placeholder Status Card */
+    .placeholder-status {{
+        border: 2px dashed {GRID_LINE}; 
+        background-color: {SECONDARY_LIGHT};
+        border-radius: 8px;
+        padding: 30px;
+        height: 100%;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }}
+    .placeholder-status p {{
+        color:{GRID_LINE}; 
+        font-weight: bold; 
+        margin: 0; 
+        text-align: center;
+    }}
+
 </style>
 """
 st.markdown(custom_css, unsafe_allow_html=True)
@@ -281,7 +317,7 @@ def draw_boxes_on_image(image_bytes, detections):
     image_width, image_height = image.size
     
     # Warna Baru
-    CLEAN_RGB = ImageColor.getrgb(ACCENT_BLUE)
+    CLEAN_RGB = ImageColor.getrgb(ACCENT_GREEN)
     MESSY_RGB = ImageColor.getrgb(ALERT_RED)
     TEXT_RGB = ImageColor.getrgb(CARD_BG) # Putih/White untuk kontras pada fill box
     
@@ -342,27 +378,37 @@ def draw_boxes_on_image(image_bytes, detections):
 
 def format_execution_log(results, uploaded_file_name):
     """Membuat format log tekstual yang menyerupai output konsol data."""
+    # Ubah warna log sesuai tema baru (lebih kontras)
+    LOG_BG_COLOR = TEXT_DARK # Warna background log adalah TEXT_DARK
+    LOG_TEXT_COLOR = "#FFFFFF"
+    LOG_ACCENT_COLOR = ACCENT_GREEN
+    LOG_ALERT_COLOR = ALERT_RED
+    
     log_lines = []
     
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] SYS_INIT: Audit System Initialized.")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 4))}] DATA_LOAD: Input Payload Acquired: {uploaded_file_name}.")
+    # Menggunakan HTML tag span untuk styling log line per line
+    def log_line(message, color=LOG_TEXT_COLOR):
+        return f"[{time.strftime('%H:%M:%S')}] <span style='color:{color};'>{message}</span>"
+
+    log_lines.append(log_line(f"SYS_INIT: Audit System Initialized."))
+    log_lines.append(log_line(f"DATA_LOAD: Input Payload Acquired: {uploaded_file_name}.", "#9CA3AF")) # Grayer color for data load
 
     # Log Model 1: Deteksi
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 3))}] MODEL_A (YOLOv8): Loading Detection Core <b>{results['detection_model']}</b>.")
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 2))}] INFERENCE_DET: Detected {len(results['detections'])} assets. UNOPTIMIZED count: {results['messy_count']}.")
+    log_lines.append(log_line(f"MODEL_A (YOLOv8): Loading Detection Core <b>{results['detection_model']}</b>.", LOG_ACCENT_COLOR))
+    log_lines.append(log_line(f"INFERENCE_DET: Detected {len(results['detections'])} assets. UNOPTIMIZED count: {results['messy_count']}."))
     
     # Log Model 2: Klasifikasi
-    log_lines.append(f"[{time.strftime('%H:%M:%S', time.localtime(time.time() - 1))}] MODEL_B (CNN): Loading Classification Core <b>{results['classification_model']}</b>.")
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] INFERENCE_CLASS: Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%.")
+    log_lines.append(log_line(f"MODEL_B (CNN): Loading Classification Core <b>{results['classification_model']}</b>.", LOG_ACCENT_COLOR))
+    log_lines.append(log_line(f"INFERENCE_CLASS: Clean Conf: {results['conf_clean']}%, Messy Conf: {results['conf_messy']}%.", "#9CA3AF"))
     
     # Log Hybrid Rule
-    tag_color = ACCENT_BLUE if results['is_clean'] else ALERT_RED
+    tag_color = ACCENT_GREEN if results['is_clean'] else LOG_ALERT_COLOR
     
     if results.get('is_overridden'):
-        log_lines.append(f"[{time.strftime('%H:%M:%S')}] <span style='color:{ALERT_RED};'>AUDIT_RULE: Hybrid Override Triggered! High clutter count ({results['messy_count']}) forces MESSY status.</span>")
+        log_lines.append(log_line(f"AUDIT_RULE: Hybrid Override Triggered! High clutter count ({results['messy_count']}) forces MESSY status.", LOG_ALERT_COLOR))
         
     final_status = results['final_status'].split(': ')[1]
-    log_lines.append(f"[{time.strftime('%H:%M:%S')}] AUDIT_REPORT: Final Status: <span style='color:{tag_color};'><b>{final_status}</b></span>.")
+    log_lines.append(log_line(f"AUDIT_REPORT: Final Status: <b>{final_status}</b>.", tag_color))
     
     return '<br>'.join(log_lines)
 
@@ -393,7 +439,8 @@ def run_ml_analysis():
     
     # Placeholder log dan progress bar
     log_placeholder = st.empty()
-    log_placeholder.markdown(f'<p style="color: {TEXT_LIGHT};">SYS_AUDIT> Initiating inference. Loading models...</p>', unsafe_allow_html=True)
+    # Mengubah warna teks pesan menjadi TEXT_DARK agar kontras di light mode
+    log_placeholder.markdown(f'<p style="color: {TEXT_DARK};">SYS_AUDIT> Initiating inference. Loading models...</p>', unsafe_allow_html=True) 
     
     progress_bar = st.progress(0, text="[PROCESS_FLOW] Loading Tensor Core & Running Inference...")
     
@@ -493,8 +540,8 @@ def generate_recommendations(results):
     item_counts = pd.Series(messy_items).value_counts()
     
     if item_counts.empty:
-            # Ini terjadi jika override rule yang memicu 'Messy' tapi YOLO count masih rendah
-            recs.append("Meskipun statusnya ALERT, clutter yang terdeteksi relatif tersebar. Fokus pada penataan ulang barang-barang kecil di permukaan meja.")
+             # Ini terjadi jika override rule yang memicu 'Messy' tapi YOLO count masih rendah
+             recs.append("Meskipun statusnya ALERT, clutter yang terdeteksi relatif tersebar. Fokus pada penataan ulang barang-barang kecil di permukaan meja.")
     else:
         # Rekomendasi berdasarkan item yang terdeteksi
         for item, count in item_counts.head(3).items():
@@ -520,9 +567,9 @@ def generate_recommendations(results):
 st.markdown(f"""
     <header>
         <h1>SPATIAL AUDIT INTERFACE</h1>
-        <p style="color: {TEXT_LIGHT}; font-size: 16px;">Analisis Integritas Spasial A.I. Dual-Model (Deteksi Objek + Klasifikasi)</p>
+        <p style="color: {TEXT_DARK}; font-size: 18px; font-weight: 400;">— ANALISIS INTEGRITAS SPASIAL A.I. DUAL-MODEL —</p>
     </header>
-    <div style="margin-bottom: 25px;"></div>
+    <div style="margin-bottom: 30px;"></div>
     """, unsafe_allow_html=True)
 
 
@@ -530,15 +577,15 @@ col_input, col_detection = st.columns([1, 1])
 
 with col_input:
     st.markdown('<div class="data-module-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2><span style="color: {ACCENT_BLUE};">01.</span> INPUT MATRIX</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2><span style="color: {ACCENT_GREEN};">01.</span> INPUT MATRIX</h2>', unsafe_allow_html=True)
     
-    # Status Payload
+    # Status Payload - Lebih menonjolkan ACCENT_GREEN
     file_display = st.session_state.uploaded_file.name if st.session_state.uploaded_file else "AWAITING IMAGE FILE"
-    status_card_class = "status-box status-clean" if st.session_state.uploaded_file else "status-box"
+    
     st.markdown(f"""
-        <div class="status-box" style="border: 1px dashed {GRID_LINE};">
-            <p style="margin: 0; font-weight: bold; font-size: 14px; color:{TEXT_LIGHT};">PAYLOAD STATUS:</p>
-            <p style="margin: 0; font-size: 14px; font-weight: 500; color:{ACCENT_BLUE if st.session_state.uploaded_file else TEXT_LIGHT};">{file_display}</p>
+        <div class="status-box" style="border: 1px dashed {GRID_LINE}; background-color: {SECONDARY_LIGHT};">
+            <p style="margin: 0; font-weight: 700; font-size: 14px; color:{TEXT_DARK};">PAYLOAD STATUS:</p>
+            <p style="margin: 0; font-size: 16px; font-weight: 600; color:{ACCENT_GREEN if st.session_state.uploaded_file else TEXT_DARK};">{file_display}</p>
         </div>
         """, unsafe_allow_html=True)
 
@@ -567,91 +614,102 @@ with col_input:
 
 with col_detection:
     st.markdown('<div class="data-module-card">', unsafe_allow_html=True)
-    st.markdown(f'<h2><span style="color: {ACCENT_BLUE};">02.</span> VISUAL DETECTOR GRID</h2>', unsafe_allow_html=True)
+    st.markdown(f'<h2><span style="color: {ACCENT_GREEN};">02.</span> VISUAL DETECTOR GRID</h2>', unsafe_allow_html=True)
 
     # Tambahkan border/styling pada gambar
-    image_style = f"border: 2px solid {ACCENT_BLUE if st.session_state.analysis_results and st.session_state.analysis_results['is_clean'] else ALERT_RED if st.session_state.analysis_results else GRID_LINE}; border-radius: 4px; padding: 5px; background-color: {BG_DARK};"
-
-    st.markdown(f'<div style="{image_style}">', unsafe_allow_html=True)
-
+    
     if st.session_state.uploaded_file:
+        # Tentukan border berdasarkan status hasil
+        if st.session_state.analysis_results:
+            border_color = ACCENT_GREEN if st.session_state.analysis_results['is_clean'] else ALERT_RED
+            caption = 'VISUALIZATION: Bounding Box Output (YOLO v8)' if st.session_state.processed_image else 'VISUALIZATION: Original Image Stream'
+        else:
+            border_color = GRID_LINE
+            caption = 'VISUALIZATION: Original Image Stream'
+            
+        image_style = f"border: 4px solid {border_color}; border-radius: 8px; padding: 5px; background-color: {BG_DARK}; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.1);"
+
+        st.markdown(f'<div style="{image_style}">', unsafe_allow_html=True)
+
         if st.session_state.processed_image:
-            st.image(st.session_state.processed_image, caption='VISUALIZATION: Bounding Box Output (YOLO v8)', use_container_width=True)
+            st.image(st.session_state.processed_image, caption=caption, use_container_width=True)
         else:
             image_data = st.session_state.uploaded_file.getvalue()
-            st.image(image_data, caption='VISUALIZATION: Original Image Stream', use_container_width=True)
+            st.image(image_data, caption=caption, use_container_width=True)
+            
+        st.markdown('</div>', unsafe_allow_html=True)
             
     else:
         # URL Placeholder disesuaikan dengan skema warna baru
-        placeholder_bg = BG_DARK.replace('#', '')
-        placeholder_text = TEXT_LIGHT.replace('#', '')
+        placeholder_bg = SECONDARY_LIGHT.replace('#', '')
+        placeholder_text = TEXT_DARK.replace('#', '')
         st.image(f"https://placehold.co/1200x675/{placeholder_bg}/{placeholder_text}?text=UPLOAD+IMAGE+TO+ACTIVATE+AUDIT+SCANNER", caption="Awaiting Input Data Stream", use_container_width=True)
 
-    st.markdown('</div>', unsafe_allow_html=True)
     st.markdown('</div>', unsafe_allow_html=True)
 
 
 # --- Separator ---
-st.markdown(f"<hr style='border-top: 1px dashed {GRID_LINE}; margin-top: 20px; margin-bottom: 20px;'>", unsafe_allow_html=True) 
+st.markdown(f"<hr style='border-top: 2px solid {SECONDARY_LIGHT}; margin-top: 25px; margin-bottom: 25px;'>", unsafe_allow_html=True) 
 
 # --- TAMPILAN 2: EXECUTION REPORT & METRICS ---
 st.markdown('<div class="data-module-card" style="margin-top: 20px;">', unsafe_allow_html=True)
-st.markdown(f'<h2><span style="color: {ACCENT_BLUE};">03.</span> AUDIT REPORT & METRICS</h2>', unsafe_allow_html=True)
+st.markdown(f'<h2><span style="color: {ACCENT_GREEN};">03.</span> AUDIT REPORT & METRICS</h2>', unsafe_allow_html=True)
 
 results = st.session_state.analysis_results
 
 col_report, col_conf_metrics = st.columns([1, 1])
 
 with col_report:
-    st.markdown(f'<h4>{f"FINAL AUDIT STATUS" if results else "Status Analysis"}</h4>', unsafe_allow_html=True)
+    st.markdown(f'<h4>FINAL AUDIT STATUS</h4>', unsafe_allow_html=True)
 
     if results:
         status_main_text = results['final_status'].split(': ')[1]
         css_class_status = 'status-clean' if results['is_clean'] else 'status-messy'
         message = results['final_message']
         
-        # Mengubah warna teks pesan menjadi TEXT_LIGHT agar kontras di light mode
-        message_color = TEXT_LIGHT 
+        # Mengubah warna teks pesan menjadi TEXT_DARK agar kontras di light mode
+        message_color = TEXT_DARK 
         
         st.markdown(f"""
-            <div class="status-box {css_class_status}" style="text-align: left; padding: 20px; border-width: 3px;">
-                <p style="margin: 0; font-size: 14px; font-weight: 500;">REPORT SUMMARY:</p>
-                <p class="status-text-large" style="color: inherit; margin-bottom: 15px;">{status_main_text}</p>
-                <p style="font-size: 13px; color: {message_color}; font-weight: 500; opacity: 0.8;">{message}</p>
+            <div class="status-box {css_class_status}" style="text-align: left; padding: 25px; border-width: 4px;">
+                <p style="margin: 0; font-size: 14px; font-weight: 600;">REPORT SUMMARY:</p>
+                <p class="status-text-large" style="color: {TEXT_DARK}; margin-bottom: 15px;">{status_main_text}</p>
+                <p style="font-size: 14px; color: {message_color}; font-weight: 500; opacity: 0.8;">{message}</p>
             </div>
             """, unsafe_allow_html=True)
             
     else:
+        # Placeholder yang lebih baik
         st.markdown(f"""
-            <div class="status-box" style="border: 2px dashed {GRID_LINE}; padding: 30px;">
-                <p style="color:{GRID_LINE}; font-weight: bold; margin: 0;">-- INFERENCE DATA PENDING --</p>
+            <div class="placeholder-status" style="height: 180px;">
+                <p style="color:#A0AEC0; font-weight: 600; margin: 0; opacity: 0.8;">-- INFERENCE DATA PENDING --</p>
             </div>
             """, unsafe_allow_html=True)
 
 with col_conf_metrics:
-    st.markdown(f'<h4>{f"CONFIDENCE SCORES" if results else "Confidence Scores"}</h4>', unsafe_allow_html=True)
+    st.markdown(f'<h4>CONFIDENCE SCORES</h4>', unsafe_allow_html=True)
     if results:
         col_clean, col_messy = st.columns(2)
         with col_clean:
             st.markdown(f"""
                 <div class="status-box status-clean">
-                    <p style="color: {ACCENT_BLUE}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">CLEAN CONFIDENCE</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_clean"]}%</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 10px; opacity: 0.6;">(From Model B)</p>
+                    <p style="color: {ACCENT_GREEN}; font-size: 14px; margin-bottom: 5px; font-weight: 700;">CLEAN CONFIDENCE</p>
+                    <p style="color: {TEXT_DARK}; font-size: 32px; font-weight: 800;">{results["conf_clean"]}%</p>
+                    <p style="color: {TEXT_DARK}; font-size: 12px; opacity: 0.6;">(From Model B)</p>
                 </div>
                 """, unsafe_allow_html=True)
         with col_messy:
             st.markdown(f"""
                 <div class="status-box status-messy">
-                    <p style="color: {ALERT_RED}; font-size: 12px; margin-bottom: 5px; font-weight: bold;">MESSY CONFIDENCE</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 28px; font-weight: bold;">{results["conf_messy"]}%</p>
-                    <p style="color: {TEXT_LIGHT}; font-size: 10px; opacity: 0.6;">(From Model B)</p>
+                    <p style="color: {ALERT_RED}; font-size: 14px; margin-bottom: 5px; font-weight: 700;">MESSY CONFIDENCE</p>
+                    <p style="color: {TEXT_DARK}; font-size: 32px; font-weight: 800;">{results["conf_messy"]}%</p>
+                    <p style="color: {TEXT_DARK}; font-size: 12px; opacity: 0.6;">(From Model B)</p>
                 </div>
                 """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
-            <div class="status-box" style="border: 2px dashed {GRID_LINE}; padding: 30px; margin-top: 10px;">
-                <p style="color:{GRID_LINE}; font-weight: bold; margin: 0;">-- NO DATA --</p>
+            <div class="placeholder-status" style="height: 180px; margin-top: 10px;">
+                <p style="color:#A0AEC0; font-weight: 600; margin: 0; opacity: 0.8;">-- NO DATA --</p>
             </div>
             """, unsafe_allow_html=True)
 
@@ -659,7 +717,7 @@ with col_conf_metrics:
 col_log, col_recommendation = st.columns([1, 1])
 
 with col_log:
-    st.markdown(f'<h3 style="color: {TEXT_LIGHT}; font-size: 20px; margin-top: 25px; border-bottom: 1px dashed {GRID_LINE}; padding-bottom: 5px;">Execution Log (Model Pipeline)</h3>', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="color: {TEXT_DARK}; font-size: 24px; margin-top: 30px; border-bottom: 2px solid {SECONDARY_LIGHT}; padding-bottom: 8px;">Execution Log (Model Pipeline)</h3>', unsafe_allow_html=True)
     
     log_content = st.session_state.execution_log_data or f"""[{time.strftime('%H:%M:%S')}] SYS_INIT: Audit System Initialized. Awaiting Input Payload.<br>
 [{time.strftime('%H:%M:%S')}] DATA_LOAD: No active payload detected.<br>
@@ -671,7 +729,7 @@ with col_log:
         </div>
         """, unsafe_allow_html=True)
         
-    st.markdown(f'<h3 style="color: {TEXT_LIGHT}; font-size: 20px; margin-top: 25px; border-bottom: 1px dashed {GRID_LINE}; padding-bottom: 5px;">Detected Asset Details (Model A)</h3>', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="color: {TEXT_DARK}; font-size: 24px; margin-top: 30px; border-bottom: 2px solid {SECONDARY_LIGHT}; padding-bottom: 8px;">Detected Asset Details (Model A)</h3>', unsafe_allow_html=True)
 
     if results:
         df = pd.DataFrame(results['detections'])
@@ -686,7 +744,7 @@ with col_log:
         # Highlight Tag Kerapihan
         def highlight_messy(val):
             # Menggunakan warna teks ALERT_RED di background yang sangat tipis untuk light mode
-            color = f'background-color: rgba(239, 68, 68, 0.1); color: {ALERT_RED}; font-weight: bold;' if val == 'UNOPTIMIZED' else f'color: {ACCENT_BLUE};'
+            color = f'background-color: rgba(239, 68, 68, 0.1); color: {ALERT_RED}; font-weight: bold;' if val == 'UNOPTIMIZED' else f'color: {ACCENT_GREEN};'
             return color
             
         st.dataframe(
@@ -700,7 +758,7 @@ with col_log:
 
 
 with col_recommendation:
-    st.markdown(f'<h3 style="color: {TEXT_LIGHT}; font-size: 20px; margin-top: 25px; border-bottom: 1px dashed {GRID_LINE}; padding-bottom: 5px;">Spatial Optimization Recommendations</h3>', unsafe_allow_html=True)
+    st.markdown(f'<h3 style="color: {TEXT_DARK}; font-size: 24px; margin-top: 30px; border-bottom: 2px solid {SECONDARY_LIGHT}; padding-bottom: 8px;">Spatial Optimization Recommendations</h3>', unsafe_allow_html=True)
     
     if results:
         recs = generate_recommendations(results)
@@ -712,8 +770,8 @@ with col_recommendation:
         """, unsafe_allow_html=True)
     else:
         st.markdown(f"""
-            <div class="status-box" style="border: 2px dashed {GRID_LINE}; padding: 20px; margin-top: 10px; height: 300px;">
-                <p style="color:{GRID_LINE}; font-weight: bold; margin: 0; text-align: center;">-- REKOMENDASI HANYA AKAN MUNCUL SETELAH AUDIT DATA SELESAI --</p>
+            <div class="placeholder-status" style="height: 300px;">
+                <p style="color:#A0AEC0; font-weight: 600; margin: 0; text-align: center; opacity: 0.8;">-- REKOMENDASI HANYA AKAN MUNCUL SETELAH AUDIT DATA SELESAI --</p>
             </div>
             """, unsafe_allow_html=True)
 
