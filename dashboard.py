@@ -155,8 +155,8 @@ def load_ml_model():
     
     try:
         # PENTING: Ganti path ini jika lokasi file Anda berbeda
-        YOLO_MODEL_PATH = "Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
-        CNN_MODEL_PATH = "SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
+        YOLO_MODEL_PATH = "model/Siti Naura Khalisa_Laporan 4.pt" # Menggunakan nama file yang diunggah
+        CNN_MODEL_PATH = "model/SitiNauraKhalisa_Laporan2.h5"     # Menggunakan nama file yang diunggah
 
         # Model 1: Deteksi Objek (YOLOv8)
         yolo_model = YOLO(YOLO_MODEL_PATH)
